@@ -32,7 +32,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-screen mx-auto w-auto items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle className="text-2xl">Log In</CardTitle>
