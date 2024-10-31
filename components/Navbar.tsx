@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { auth } from "@/firebaseConfig"; // Ensure auth is properly imported
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check for authentication status
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Nav items for unauthenticated users
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Signup", href: "/signup" },
     { name: "Login", href: "/login" },
     { name: "Contact", href: "/contact" },
   ];
+
+  // Handle Logout
+  const handleLogout = async () => {
+    await auth.signOut();
+  };
 
   return (
     <nav className="bg-background border-b">
@@ -27,15 +43,17 @@ export default function Navbar() {
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-foreground hover:bg-accent hover:text-accent-foreground px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  {item.name}
-                </Link>
-              ))}
+
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-foreground hover:bg-accent hover:text-accent-foreground px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              }
             </div>
           </div>
           <div className="md:hidden">
@@ -49,16 +67,18 @@ export default function Navbar() {
               <SheetContent side="right">
                 <div className="mt-6 flow-root">
                   <div className="space-y-2 py-6">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="block px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+
+                      {navItems.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className="block px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {item.name}
+                        </Link>
+                      ))
+                    }
                   </div>
                 </div>
               </SheetContent>
