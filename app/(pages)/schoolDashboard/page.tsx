@@ -46,7 +46,9 @@ export default function Dashboard() {
       return;
     }
 
-    setItems(items.map((item) => (item.id === updatedSchool.id ? updatedSchool : item)));
+    setItems(
+      items.map((item) => (item.id === updatedSchool.id ? updatedSchool : item))
+    );
     setEditingSchool(null);
     setError(null); // Clear any previous error
   };
@@ -56,17 +58,22 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex justify-center p-6">
-      <Card className="w-full max-w-4xl shadow-lg rounded-lg bg-white">
+    <div className="flex justify-center p-6 min-h-screen">
+      <Card className="w-full max-w-4xl shadow-lg rounded-lg ">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-extrabold mb-4">Dashboard</CardTitle>
-          <CardDescription className="text-gray-600 mb-6">Manage Your Schools</CardDescription>
+          <CardTitle className="text-3xl font-extrabold mb-4">
+            Dashboard
+          </CardTitle>
+          <CardDescription className="text-gray-600 mb-6">
+            Manage Your Schools
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {error && <div className="text-red-500 text-center">{error}</div>} {/* Display error message */}
+          {error && <div className="text-red-500 text-center">{error}</div>}{" "}
+          {/* Display error message */}
           <div className="flex justify-between items-center mb-6">
-            <Button 
-              onClick={() => setShowAddForm(!showAddForm)} 
+            <Button
+              onClick={() => setShowAddForm(!showAddForm)}
               className="bg-blue-600 text-white font-semibold hover:bg-blue-700"
             >
               <Plus className="mr-2 h-5 w-5" /> Add New School
@@ -74,10 +81,10 @@ export default function Dashboard() {
           </div>
           {showAddForm && <AddSchoolForm onSave={addItem} />}
           {editingSchool && (
-            <EditSchoolForm 
-              school={editingSchool} 
-              onSave={saveEditedItem} 
-              onCancel={() => setEditingSchool(null)} 
+            <EditSchoolForm
+              school={editingSchool}
+              onSave={saveEditedItem}
+              onCancel={() => setEditingSchool(null)}
             />
           )}
           <div className="bg-gray-100 p-4 rounded-md shadow-md">
@@ -116,7 +123,9 @@ export default function Dashboard() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => console.log(`Reset password for ${item.name}`)}
+                        onClick={() =>
+                          console.log(`Reset password for ${item.name}`)
+                        }
                         className="hover:text-blue-600"
                       >
                         <Lock className="w-4 h-4 mr-2" />

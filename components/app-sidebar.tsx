@@ -1,5 +1,5 @@
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
-
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +37,7 @@ const items = [
   },
   {
     title: "superadmin-dashboard",
-    url: "superAdmin",
+    url: "superadmin",
     icon: Settings,
   },
 ];

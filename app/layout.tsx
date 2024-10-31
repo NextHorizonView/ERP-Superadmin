@@ -32,13 +32,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SidebarProvider>
-          <div className="flex min-h-screen">
+          <div className="flex min-h-screen w-full">
+            {/* sidebar left */}
             <AppSidebar />
-            <main className=" flex flex-col items-center justify-center min-w-full relative">
-              <header className="absolute top-4 left-4">
-                <SidebarTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9" />
+
+            <main className="flex flex-col items-center justify-center min-h-screen w-full">
+              <header className="lg:hidden absolute top-4 left-4 bg-slate-500">
+                <SidebarTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 lg:hidden" />
               </header>
-              <div className="w-full px-4">{children}</div>
+              <div className="flex flex-col justify-center bg-black w-full mx-auto">
+                {children}
+              </div>
             </main>
           </div>
         </SidebarProvider>
