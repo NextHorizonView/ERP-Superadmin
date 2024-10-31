@@ -35,6 +35,11 @@ const items = [
     url: "schoolDashboard",
     icon: Settings,
   },
+  {
+    title: "superadmin-dashboard",
+    url: "superAdmin",
+    icon: Settings,
+  },
 ];
 
 export function AppSidebar() {

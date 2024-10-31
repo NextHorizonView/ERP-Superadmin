@@ -30,11 +30,12 @@ export default function SignUp() {
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="flex h-screen items-center justify-center">
-      <Card className="w-[350px]">
+    <div className="flex items-center justify-center min-h-screen  ">
+      <Card className="w-[500px] shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl text-center">Sign Up</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,7 +65,7 @@ export default function SignUp() {
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?
+            Already have an account?{" "}
             <Link href="/login" className="underline hover:text-primary">
               Log in
             </Link>
