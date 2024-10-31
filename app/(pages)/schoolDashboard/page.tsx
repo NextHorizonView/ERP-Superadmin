@@ -122,7 +122,7 @@ export default function Dashboard() {
                         <Lock className="w-4 h-4 mr-2" />
                         Reset Password
                       </Button>
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() => console.log(`Edit email for ${item.name}`)}
@@ -130,7 +130,7 @@ export default function Dashboard() {
                       >
                         <Mail className="w-4 h-4 mr-2" />
                         Edit Email
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="destructive"
                         size="sm"
