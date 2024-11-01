@@ -2,29 +2,38 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // Import useRouter
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter(); // Initialize router
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    try {
+      // Attempt to create a new user with email and password
+      await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: "SignUp successful!" });
-    } catch (error) {
+
+      // Redirect to homepage after successful signup
+      router.push("/");
+    } catch (error: unknown) {
+      const err = error as Error;
       toast({
         title: "Signup failed",
-        description: "Please check your credentials.",
+        description: err.message || "Please check your credentials.",
       });
     } finally {
       setIsLoading(false);
