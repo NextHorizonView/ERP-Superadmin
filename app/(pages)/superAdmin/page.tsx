@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Edit3, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function SuperAdminPage() {
   const [admins, setAdmins] = useState([
@@ -79,12 +80,15 @@ export default function SuperAdminPage() {
                       />
                     </div>
                   ) : (
-                    <div>
+                    <Link
+                      href={`/superadmin/admin/${admin.id}`}
+                      className="block hover:underline"
+                    >
                       <h4 className="font-medium">{admin.name}</h4>
                       <p className="text-sm text-muted-foreground">
                         {admin.email}
                       </p>
-                    </div>
+                    </Link>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
