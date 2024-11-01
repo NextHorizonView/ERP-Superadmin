@@ -25,10 +25,9 @@ export default function Dashboard() {
   ]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null); // State for error messages
+  const [error, setError] = useState<string | null>(null);
 
   const addItem = (newItem: any) => {
-    // Validate input
     if (!newItem.name || !newItem.email || !newItem.address) {
       setError("All fields are required.");
       return;
@@ -36,11 +35,10 @@ export default function Dashboard() {
 
     setItems([...items, { ...newItem, id: Date.now() }]);
     setShowAddForm(false);
-    setError(null); // Clear any previous error
+    setError(null);
   };
 
   const saveEditedItem = (updatedSchool: any) => {
-    // Validate input
     if (!updatedSchool.name || !updatedSchool.email || !updatedSchool.address) {
       setError("All fields are required.");
       return;
@@ -50,7 +48,7 @@ export default function Dashboard() {
       items.map((item) => (item.id === updatedSchool.id ? updatedSchool : item))
     );
     setEditingSchool(null);
-    setError(null); // Clear any previous error
+    setError(null);
   };
 
   const deleteItem = (id: number) => {
@@ -58,23 +56,22 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex justify-center p-6 min-h-screen">
-      <Card className="w-full max-w-4xl shadow-lg rounded-lg ">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-extrabold mb-4">
+    <div className="flex justify-center p-2 sm:p-6 min-h-screen">
+      <Card className="w-full max-w-4xl shadow-lg rounded-lg">
+        <CardHeader className="text-center p-4 sm:p-6">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold mb-2 sm:mb-4">
             Dashboard
           </CardTitle>
-          <CardDescription className="text-gray-600 mb-6">
+          <CardDescription className="text-gray-600 mb-4 sm:mb-6">
             Manage Your Schools
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {error && <div className="text-red-500 text-center">{error}</div>}{" "}
-          {/* Display error message */}
-          <div className="flex justify-between items-center mb-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+          {error && <div className="text-red-500 text-center">{error}</div>}
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
             <Button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-blue-600 text-white font-semibold hover:bg-blue-700"
+              className="w-full sm:w-auto bg-blue-600 text-white font-semibold hover:bg-blue-700"
             >
               <Plus className="mr-2 h-5 w-5" /> Add New School
             </Button>
@@ -87,35 +84,37 @@ export default function Dashboard() {
               onCancel={() => setEditingSchool(null)}
             />
           )}
-          <div className="bg-gray-100 p-4 rounded-md shadow-md">
-            <h3 className="font-bold text-lg mb-4">Schools:</h3>
+          <div className="bg-gray-100 p-3 sm:p-4 rounded-md shadow-md">
+            <h3 className="font-bold text-lg mb-3 sm:mb-4">Schools:</h3>
             {items.length > 0 ? (
-              <ul className="space-y-4">
+              <ul className="space-y-3 sm:space-y-4">
                 {items.map((item) => (
                   <li
                     key={item.id}
-                    className="bg-white p-4 rounded-md shadow-sm flex justify-between items-center"
+                    className="bg-white p-3 sm:p-4 rounded-md shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       {item.logo && (
                         <img
                           src={item.logo}
                           alt={`${item.name} logo`}
-                          className="w-16 h-16 object-cover rounded-full"
+                          className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full"
                         />
                       )}
                       <div>
-                        <h4 className="font-semibold text-xl">{item.name}</h4>
+                        <h4 className="font-semibold text-lg sm:text-xl">
+                          {item.name}
+                        </h4>
                         <p className="text-sm text-gray-500">{item.email}</p>
                         <p className="text-sm text-gray-500">{item.address}</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setEditingSchool(item)} // Set the school to be edited
-                        className="hover:text-blue-600"
+                        onClick={() => setEditingSchool(item)}
+                        className="w-full sm:w-auto hover:text-blue-600"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -126,24 +125,16 @@ export default function Dashboard() {
                         onClick={() =>
                           console.log(`Reset password for ${item.name}`)
                         }
-                        className="hover:text-blue-600"
+                        className="w-full sm:w-auto hover:text-blue-600"
                       >
                         <Lock className="w-4 h-4 mr-2" />
                         Reset Password
                       </Button>
-                      {/* <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => console.log(`Edit email for ${item.name}`)}
-                        className="hover:text-blue-600"
-                      >
-                        <Mail className="w-4 h-4 mr-2" />
-                        Edit Email
-                      </Button> */}
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => deleteItem(item.id)}
+                        className="w-full sm:w-auto"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete

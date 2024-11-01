@@ -40,7 +40,7 @@ export default function RootLayout({
               <header className="lg:hidden absolute top-4 left-4 bg-slate-500">
                 <SidebarTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9 lg:hidden" />
               </header>
-              <div className="flex flex-col justify-center bg-black w-full mx-auto">
+              <div className="flex flex-col justify-center w-full mx-auto">
                 {children}
               </div>
             </main>

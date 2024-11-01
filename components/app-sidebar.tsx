@@ -37,7 +37,7 @@ const items = [
   },
   {
     title: "superadmin-dashboard",
-    url: "superadmin",
+    url: "superAdmin",
     icon: Settings,
   },
 ];

@@ -1,4 +1,3 @@
-// SuperAdminPage.tsx
 "use client";
 
 import { useState } from "react";
@@ -47,10 +46,10 @@ export default function SuperAdminPage() {
   };
 
   return (
-    <div className="w-full flex justify-center p-4 min-h-screen">
+    <div className="w-full flex justify-center p-2 sm:p-4 min-h-screen">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-center">
             Super Admin Dashboard
           </CardTitle>
         </CardHeader>
@@ -59,18 +58,17 @@ export default function SuperAdminPage() {
             {admins.map((admin) => (
               <li
                 key={admin.id}
-                className="bg-card p-4 rounded flex justify-between items-center"
+                className="bg-card p-3 sm:p-4 rounded flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4"
               >
-                <div>
+                <div className="w-full sm:w-auto">
                   {admin.isEditing ? (
-                    <div>
+                    <div className="space-y-2">
                       <Input
                         value={admin.name}
                         onChange={(e) =>
                           handleInputChange(admin.id, "name", e.target.value)
                         }
                         placeholder="Admin Name"
-                        className="mb-2"
                       />
                       <Input
                         value={admin.email}
@@ -89,9 +87,10 @@ export default function SuperAdminPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {admin.isEditing ? (
                     <Button
+                      className="w-full sm:w-auto"
                       variant="outline"
                       size="sm"
                       onClick={() => saveChanges(admin.id)}
@@ -100,6 +99,7 @@ export default function SuperAdminPage() {
                     </Button>
                   ) : (
                     <Button
+                      className="w-full sm:w-auto"
                       variant="outline"
                       size="sm"
                       onClick={() => toggleEdit(admin.id)}
@@ -109,6 +109,7 @@ export default function SuperAdminPage() {
                     </Button>
                   )}
                   <Button
+                    className="w-full sm:w-auto"
                     variant="outline"
                     size="sm"
                     onClick={() => resetEmail(admin.id)}
@@ -117,6 +118,7 @@ export default function SuperAdminPage() {
                     Reset Email
                   </Button>
                   <Button
+                    className="w-full sm:w-auto"
                     variant="destructive"
                     size="sm"
                     onClick={() => deleteAdmin(admin.id)}
