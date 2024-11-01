@@ -104,16 +104,11 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
                       {item.logo && (
-                        // <Image
-                        //   src={item.logo}
-                        //   alt={`${item.name} logo`}
-                        //   className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full"
-                        // />
                         <Image
                           src={item.logo}
                           alt={`${item.name} logo`}
-                          width={50} // Specify the width
-                          height={50} // Specify the height
+                          width={50}
+                          height={50}
                           className="object-cover rounded-full"
                         />
                       )}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 interface SchoolData {
   name: string;
   email: string;
-  logo: string;
+  logo: string; // This will now store the image URL after upload
   address: string;
 }
 
@@ -22,9 +22,23 @@ export default function AddSchoolForm({
     logo: "",
     address: "",
   });
+  const [file, setFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, logo: reader.result as string }));
+      };
+      reader.readAsDataURL(selectedFile);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,11 +64,19 @@ export default function AddSchoolForm({
       />
       <Input
         name="logo"
-        type="text"
-        placeholder="Logo URL"
-        value={formData.logo}
-        onChange={handleChange}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
       />
+      {file && (
+        <div className="mt-2">
+          <img
+            src={URL.createObjectURL(file)}
+            alt="Logo Preview"
+            className="w-20 h-20 object-cover rounded"
+          />
+        </div>
+      )}
       <Input
         name="address"
         type="text"

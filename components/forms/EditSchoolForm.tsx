@@ -23,6 +23,19 @@ export default function EditSchoolForm({
   const [email, setEmail] = useState(school.email);
   const [logo, setLogo] = useState(school.logo);
   const [address, setAddress] = useState(school.address);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result as string); // Set logo to the data URL
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
 
   const handleSave = () => {
     onSave({
@@ -52,11 +65,19 @@ export default function EditSchoolForm({
       />
       <Input
         name="logo"
-        type="text"
-        value={logo}
-        onChange={(e) => setLogo(e.target.value)}
-        placeholder="Logo URL"
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
       />
+      {file && (
+        <div className="mt-2">
+          <img
+            src={URL.createObjectURL(file)}
+            alt="Logo Preview"
+            className="w-20 h-20 object-cover rounded"
+          />
+        </div>
+      )}
       <Input
         name="address"
         type="text"
