@@ -28,7 +28,7 @@ export default function SignUp() {
       toast({ title: "SignUp successful!" });
 
       // Redirect to homepage after successful signup
-      router.push("/");
+      router.push("/superAdmin");
     } catch (error: unknown) {
       const err = error as Error;
       toast({
