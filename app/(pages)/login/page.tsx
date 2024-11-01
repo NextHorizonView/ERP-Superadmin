@@ -28,7 +28,7 @@ export default function Login() {
       toast({ title: "Login successful!" });
       
       // Redirect to homepage after successful login
-      router.push("/superadmin");
+      router.push("/superAdmin");
     } catch (error: any) {
       toast({
         title: "Login failed",
