@@ -1,15 +1,24 @@
-// AddSchoolForm.tsx
 "use client";
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function AddSchoolForm({ onSave }: { onSave: (schoolData: any) => void }) {
-  const [formData, setFormData] = useState({
+interface SchoolData {
+  name: string;
+  email: string;
+  logo: string;
+  address: string;
+}
+
+export default function AddSchoolForm({
+  onSave,
+}: {
+  onSave: (schoolData: Omit<SchoolData, "id">) => void;
+}) {
+  const [formData, setFormData] = useState<Omit<SchoolData, "id">>({
     name: "",
     email: "",
-    password: "",
     logo: "",
     address: "",
   });
@@ -20,7 +29,7 @@ export default function AddSchoolForm({ onSave }: { onSave: (schoolData: any) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave(formData); // Pass the formData without id
   };
 
   return (
@@ -37,13 +46,6 @@ export default function AddSchoolForm({ onSave }: { onSave: (schoolData: any) =>
         type="email"
         placeholder="Email"
         value={formData.email}
-        onChange={handleChange}
-      />
-      <Input
-        name="password"
-        type="password"
-        placeholder="Password"
-        value={formData.password}
         onChange={handleChange}
       />
       <Input

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Lock, Mail, Edit } from "lucide-react";
+import { Plus, Trash2, Lock, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +12,18 @@ import {
 } from "@/components/ui/card";
 import AddSchoolForm from "@/components/forms/AddSchoolForm";
 import EditSchoolForm from "@/components/forms/EditSchoolForm";
+import Image from "next/image";
+
+interface School {
+  id: number;
+  name: string;
+  email: string;
+  logo: string;
+  address: string;
+}
 
 export default function Dashboard() {
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<School[]>([
     {
       id: 1,
       name: "School 1",
@@ -23,11 +32,11 @@ export default function Dashboard() {
       address: "Address 1",
     },
   ]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSchool, setEditingSchool] = useState<any>(null);
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const addItem = (newItem: any) => {
+  const addItem = (newItem: Omit<School, "id">) => {
     if (!newItem.name || !newItem.email || !newItem.address) {
       setError("All fields are required.");
       return;
@@ -38,7 +47,7 @@ export default function Dashboard() {
     setError(null);
   };
 
-  const saveEditedItem = (updatedSchool: any) => {
+  const saveEditedItem = (updatedSchool: School) => {
     if (!updatedSchool.name || !updatedSchool.email || !updatedSchool.address) {
       setError("All fields are required.");
       return;
@@ -95,10 +104,17 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
                       {item.logo && (
-                        <img
+                        // <Image
+                        //   src={item.logo}
+                        //   alt={`${item.name} logo`}
+                        //   className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full"
+                        // />
+                        <Image
                           src={item.logo}
                           alt={`${item.name} logo`}
-                          className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full"
+                          width={50} // Specify the width
+                          height={50} // Specify the height
+                          className="object-cover rounded-full"
                         />
                       )}
                       <div>
