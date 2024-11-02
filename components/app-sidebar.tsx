@@ -1,7 +1,6 @@
 "use client";
 
-import { Calendar, Home, Inbox, Search, Settings, LogOut } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+import { Home, Search, Settings, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Sidebar,
