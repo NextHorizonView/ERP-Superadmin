@@ -35,7 +35,7 @@ export default function AdminDetailsPage() {
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <Link
-            href="/superadmin"
+            href="/superAdmin"
             className="flex items-center text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
