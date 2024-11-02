@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, Edit3, Mail } from "lucide-react";
+import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
