@@ -1,15 +1,17 @@
+// EditSchoolForm.tsx
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface School {
-  id: number;
+  id: string; // Keep as string to match the Dashboard
   name: string;
   email: string;
   logo: string;
   address: string;
 }
-
 export default function EditSchoolForm({
   school,
   onSave,
@@ -31,7 +33,7 @@ export default function EditSchoolForm({
       setFile(selectedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLogo(reader.result as string); // Set logo to the data URL
+        setLogo(reader.result as string);
       };
       reader.readAsDataURL(selectedFile);
     }

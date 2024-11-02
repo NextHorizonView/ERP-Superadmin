@@ -13,9 +13,10 @@ import {
 import AddSchoolForm from "@/components/forms/AddSchoolForm";
 import EditSchoolForm from "@/components/forms/EditSchoolForm";
 import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
 
 interface School {
-  id: number;
+  id: string;
   name: string;
   email: string;
   logo: string;
@@ -25,7 +26,7 @@ interface School {
 export default function Dashboard() {
   const [items, setItems] = useState<School[]>([
     {
-      id: 1,
+      id: uuidv4(),
       name: "School 1",
       email: "school1@example.com",
       logo: "https://via.placeholder.com/50",
@@ -42,7 +43,7 @@ export default function Dashboard() {
       return;
     }
 
-    setItems([...items, { ...newItem, id: Date.now() }]);
+    setItems([...items, { ...newItem, id: uuidv4() }]);
     setShowAddForm(false);
     setError(null);
   };
@@ -60,7 +61,7 @@ export default function Dashboard() {
     setError(null);
   };
 
-  const deleteItem = (id: number) => {
+  const deleteItem = (id: string) => {
     setItems(items.filter((item) => item.id !== id));
   };
 

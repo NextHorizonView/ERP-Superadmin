@@ -30,15 +30,18 @@ export default function Login() {
       // Redirect to homepage after successful login
 
       router.push("/superAdmin");
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials.",
-      });
-
-
-    } finally {
-      setIsLoading(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials.",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Please check your credentials.",
+        });
+      }
     }
   };
 

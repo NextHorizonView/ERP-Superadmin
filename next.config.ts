@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['via.placeholder.com'],
   },
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;
