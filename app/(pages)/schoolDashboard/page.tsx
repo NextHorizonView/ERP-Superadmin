@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { db } from "@/firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
-import { Plus, Trash2, Edit3 } from "lucide-react";
-import Image from "next/image";
+import {Trash2, Edit3 } from "lucide-react";
+// import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 
 interface School {
