@@ -18,7 +18,7 @@ export default function Login() {
   const { toast } = useToast();
   const router = useRouter(); // Initialize router
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -26,16 +26,22 @@ export default function Login() {
       await signInWithEmailAndPassword(auth, email, password);
 
       toast({ title: "Login successful!" });
-      
+
       // Redirect to homepage after successful login
+
       router.push("/superAdmin");
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials.",
-      });
-    } finally {
-      setIsLoading(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials.",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Please check your credentials.",
+        });
+      }
     }
   };
 

@@ -1,5 +1,8 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+"use client";
+
+import { Home, Search, Settings, LogOut } from "lucide-react";
+// import { useSidebar } from "@/components/ui/sidebar";
+import { useState, useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,38 +14,62 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
+import { useRouter } from "next/navigation";
 
-// Menu items.
-const items = [
+const authItems = [
   {
     title: "Home",
     url: "/",
     icon: Home,
   },
-
   {
-    title: "login",
-    url: "login",
-    icon: Search,
-  },
-  {
-    title: "signup",
-    url: "signup",
+    title: "School Dashboard",
+    url: "/schoolDashboard",
     icon: Settings,
   },
   {
-    title: "school-dashboard",
-    url: "schoolDashboard",
-    icon: Settings,
-  },
-  {
-    title: "superadmin-dashboard",
-    url: "superAdmin",
+    title: "Superadmin Dashboard",
+    url: "/superAdmin",
     icon: Settings,
   },
 ];
 
+const unauthItems = [
+  {
+    title: "Login",
+    url: "/login",
+    icon: Search,
+  },
+  // {
+  //   title: "Signup",
+  //   url: "/signup",
+  //   icon: Settings,
+  // },
+];
+
 export function AppSidebar() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar toggle
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setIsAuthenticated(false);
+    router.push("/login");
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev); // Toggle sidebar state
+  };
   return (
     <Sidebar>
       <SidebarContent>
@@ -50,7 +77,8 @@ export function AppSidebar() {
           <SidebarGroupLabel>LOGO</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {/* Render menu items based on authentication status */}
+              {(isAuthenticated ? authItems : unauthItems).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
@@ -60,6 +88,14 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isAuthenticated && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={handleLogout}>
+                    <LogOut />
+                    <span>Logout</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

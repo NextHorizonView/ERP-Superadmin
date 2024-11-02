@@ -1,26 +1,49 @@
-// AddSchoolForm.tsx
 "use client";
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function AddSchoolForm({ onSave }: { onSave: (schoolData: any) => void }) {
-  const [formData, setFormData] = useState({
+interface SchoolData {
+  name: string;
+  email: string;
+  logo: string; // This will now store the image URL after upload
+  address: string;
+}
+
+export default function AddSchoolForm({
+  onSave,
+}: {
+  onSave: (schoolData: Omit<SchoolData, "id">) => void;
+}) {
+  const [formData, setFormData] = useState<Omit<SchoolData, "id">>({
     name: "",
     email: "",
-    password: "",
     logo: "",
     address: "",
   });
+  const [file, setFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, logo: reader.result as string }));
+      };
+      reader.readAsDataURL(selectedFile);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave(formData); // Pass the formData without id
   };
 
   return (
@@ -40,19 +63,20 @@ export default function AddSchoolForm({ onSave }: { onSave: (schoolData: any) =>
         onChange={handleChange}
       />
       <Input
-        name="password"
-        type="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={handleChange}
-      />
-      <Input
         name="logo"
-        type="text"
-        placeholder="Logo URL"
-        value={formData.logo}
-        onChange={handleChange}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
       />
+      {file && (
+        <div className="mt-2">
+          <img
+            src={URL.createObjectURL(file)}
+            alt="Logo Preview"
+            className="w-20 h-20 object-cover rounded"
+          />
+        </div>
+      )}
       <Input
         name="address"
         type="text"
