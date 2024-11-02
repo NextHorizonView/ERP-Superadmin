@@ -29,7 +29,7 @@ export default function Login() {
 
       // Redirect to homepage after successful login
 
-      router.push("/superAdmin");
+      router.push("/superadmin");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast({
@@ -86,12 +86,12 @@ export default function Login() {
               Forgot password?
             </Link>
           </div>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          {/* <p className="mt-4 text-center text-sm text-muted-foreground">
             Don't have an account? &nbsp;
             <Link href="/signup" className="underline hover:text-primary">
               Sign up
             </Link>
-          </p>
+          </p> */}
         </CardContent>
       </Card>
     </div>
