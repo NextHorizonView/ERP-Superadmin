@@ -1,7 +1,6 @@
 "use client";
 
 import { Home, Search, Settings, LogOut } from "lucide-react";
-// import { useSidebar } from "@/components/ui/sidebar";
 import { useState, useEffect } from "react";
 import {
   Sidebar,
@@ -42,18 +41,16 @@ const unauthItems = [
     url: "/login",
     icon: Search,
   },
-  // {
-  //   title: "Signup",
-  //   url: "/signup",
-  //   icon: Settings,
-  // },
+  {
+    title: "Signup",
+    url: "/signup",
+    icon: Settings,
+  },
 ];
 
 export function AppSidebar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar toggle
   const router = useRouter();
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
@@ -65,10 +62,6 @@ export function AppSidebar() {
     await signOut(auth);
     setIsAuthenticated(false);
     router.push("/login");
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev); // Toggle sidebar state
   };
   return (
     <Sidebar>
