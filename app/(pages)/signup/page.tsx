@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebaseConfig.js"; // Import Firebase auth
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -18,37 +18,33 @@ export default function SignUp() {
   const { toast } = useToast();
   const router = useRouter(); // Initialize router
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      // Use Firebase's signInWithEmailAndPassword
-      await signInWithEmailAndPassword(auth, email, password);
+      // Attempt to create a new user with email and password
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast({ title: "SignUp successful!" });
 
-      toast({ title: "Login successful!" });
-
-      // Redirect to homepage after successful login
-
-      router.push("/superadmin");
+      // Redirect to homepage after successful signup
+      router.push("/superAdmin");
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        toast({
-          title: "Login failed",
-          description: error.message || "Please check your credentials.",
-        });
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Please check your credentials.",
-        });
-      }
+      const err = error as Error;
+      toast({
+        title: "Signup failed",
+        description: err.message || "Please check your credentials.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
+
   return (
-    <div className="flex h-screen mx-auto w-auto items-center justify-center">
-      <Card className="w-[350px]">
+    <div className="flex items-center justify-center min-h-screen  ">
+      <Card className="w-[500px] shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl text-center">Sign Up</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,20 +73,12 @@ export default function SignUp() {
               {isLoading ? "Signing up..." : "Sign Up"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <Link
-              href="/forgot-password"
-              className="text-muted-foreground hover:text-primary"
-            >
-              Forgot password?
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="underline hover:text-primary">
+              Log in
             </Link>
-          </div>
-          {/* <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account? &nbsp;
-            <Link href="/signup" className="underline hover:text-primary">
-              Sign up
-            </Link>
-          </p> */}
+          </p>
         </CardContent>
       </Card>
     </div>
