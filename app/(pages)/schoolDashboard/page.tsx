@@ -67,6 +67,14 @@ export default function SchoolDashboard() {
     );
   };
 
+  const handleFileChange = (id: string, file: File | null) => {
+    setSchools((prevSchools) =>
+      prevSchools.map((school) =>
+        school.id === id ? { ...school, schoolLogoFile: file } : school
+      )
+    );
+  };
+
   const handleInputChange = (id: string, field: keyof School, value: string | boolean) => {
     setSchools((prevSchools) =>
       prevSchools.map((school) =>
@@ -211,10 +219,10 @@ export default function SchoolDashboard() {
                         onChange={(e) => handleInputChange(school.id, "schoolPassword", e.target.value)}
                         placeholder="School Password"
                       />
-                      <Input
-                        value={school.schoolLogo}
-                        onChange={(e) => handleInputChange(school.id, "schoolLogo", e.target.value)}
-                        placeholder="Logo URL"
+                      <input
+                        type="file"
+                        onChange={(e) => handleFileChange(school.id, e.target.files ? e.target.files[0] : null)}
+                        accept="image/*"
                       />
                       <Input
                         value={school.schoolAddress}

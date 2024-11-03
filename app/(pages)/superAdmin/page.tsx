@@ -73,6 +73,21 @@ export default function SuperAdminPage() {
     );
   };
 
+  const handleFileChange = (id: number, file: File | null) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string;
+        setAdmins((prevAdmins) =>
+          prevAdmins.map((admin) =>
+            admin.id === id ? { ...admin, superAdminProfileImg: imageUrl } : admin
+          )
+        );
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const saveChanges = async (id: number) => {
     const admin = admins.find((a) => a.id === id);
     if (admin) {
@@ -201,12 +216,12 @@ export default function SuperAdminPage() {
                         }
                         placeholder="SuperAdmin Email"
                       />
-                      <Input
-                        value={admin.superAdminProfileImg}
+                      <input
+                        type="file"
+                        accept="image/*"
                         onChange={(e) =>
-                          handleInputChange(admin.id, "superAdminProfileImg", e.target.value)
+                          handleFileChange(admin.id, e.target.files?.[0] || null)
                         }
-                        placeholder="Profile Image URL"
                       />
                       <Input
                         value={admin.superAdminProfilePhoneNumber}
