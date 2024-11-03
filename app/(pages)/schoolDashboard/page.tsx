@@ -9,7 +9,6 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Trash2, Edit3 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { deleteUser } from "firebase/auth";
 
 interface School {
   id: string;
@@ -77,29 +76,30 @@ export default function SchoolDashboard() {
     );
   };
 
+
+
   const saveChanges = async (id: string) => {
     const school = schools.find((s) => s.id === id);
     if (school) {
       if (!school.firestoreId) {
         // Create a new user in Firebase Authentication
         try {
-          const userCredential = await createUserWithEmailAndPassword(
+          const { user } = await createUserWithEmailAndPassword(
             auth,
             school.schoolEmail,
-            school.schoolPassword // Use the password from the form
+            school.schoolPassword 
           );
-          const user = userCredential.user;
-
+  
           // Add school to Firestore with Auth UID (not displayed in UI)
           const docRef = await addDoc(schoolsCollection, {
             schoolId: school.schoolId,
             schoolName: school.schoolName,
             schoolEmail: school.schoolEmail,
-            authUid: user.uid, // Store Auth UID in Firestore
+            authUid: user.uid, // Use the uid here
             schoolLogo: school.schoolLogo,
             schoolAddress: school.schoolAddress,
             schoolModuleBoolean: school.schoolModuleBoolean,
-            schoolPassword: school.schoolPassword // Save the password securely in Firestore
+            schoolPassword: school.schoolPassword
           });
           setSchools((prevSchools) =>
             prevSchools.map((s) =>
@@ -130,6 +130,7 @@ export default function SchoolDashboard() {
       console.log(`Changes saved for school with ID: ${id}`);
     }
   };
+  
 
   const deleteSchool = async (id: string) => {
     const school = schools.find((s) => s.id === id);
@@ -162,17 +163,17 @@ export default function SchoolDashboard() {
   //     }
   //   }
   // };
+
+ 
+
   const addNewSchool = async () => {
-    // First, create a new user in Firebase Authentication
     try {
-      const userCredential = await createUserWithEmailAndPassword(
+      const { user } = await createUserWithEmailAndPassword(
         auth,
         newSchool.schoolEmail,
         newSchool.schoolPassword // Use the password from the new school form
       );
-      const user = userCredential.user;
   
-      // Add school to Firestore
       const docRef = await addDoc(schoolsCollection, {
         schoolId: newSchool.schoolId,
         schoolName: newSchool.schoolName,
@@ -184,7 +185,6 @@ export default function SchoolDashboard() {
         schoolPassword: newSchool.schoolPassword // Save the password securely in Firestore
       });
   
-      // Update the local state with the new school entry
       setSchools((prevSchools) => [
         ...prevSchools,
         {

@@ -122,13 +122,13 @@ export default function SuperAdminPage() {
   const addNewAdmin = async () => {
     try {
       // Create the super admin user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
+      await createUserWithEmailAndPassword(
         auth,
         newAdmin.superAdminEmail,
         newAdmin.password
       );
-
-      // Get the user UID and add it to Firestore
+  
+      // Add admin data to Firestore
       const docRef = await addDoc(adminsCollection, {
         superAdminId: newAdmin.superAdminId,
         superAdminName: newAdmin.superAdminName,
@@ -136,12 +136,12 @@ export default function SuperAdminPage() {
         superAdminProfileImg: newAdmin.superAdminProfileImg,
         superAdminProfilePhoneNumber: newAdmin.superAdminProfilePhoneNumber,
       });
-
+  
       setAdmins((prevAdmins) => [
         ...prevAdmins,
         { ...newAdmin, firestoreId: docRef.id, isEditing: false },
       ]);
-
+  
       // Clear the newAdmin state to reset the form fields
       setNewAdmin({
         id: Date.now(),
@@ -160,6 +160,7 @@ export default function SuperAdminPage() {
       // Handle errors here (e.g., show a toast notification)
     }
   };
+  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
