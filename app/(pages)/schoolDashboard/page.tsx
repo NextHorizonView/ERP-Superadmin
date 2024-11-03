@@ -13,10 +13,10 @@ import { v4 as uuidv4 } from "uuid";
 interface School {
   id: string;
   firestoreId?: string;
-  schoolId: string;
+  schoolId?: string; // Use Firestore's doc ID as schoolId
   schoolName: string;
   schoolEmail: string;
-  schoolPassword: string; // Store password securely, do not display it
+  schoolPassword: string;
   schoolLogo: string;
   schoolAddress: string;
   schoolModuleBoolean: boolean;
@@ -27,16 +27,15 @@ export default function SchoolDashboard() {
   const [schools, setSchools] = useState<School[]>([]);
   const [newSchool, setNewSchool] = useState<School>({
     id: uuidv4(),
-    schoolId: "",
     schoolName: "",
     schoolEmail: "",
-    schoolPassword: "", // Initialize password
+    schoolPassword: "",
     schoolLogo: "",
     schoolAddress: "",
     schoolModuleBoolean: true,
     isEditing: true,
   });
-  const [isAddingNewSchool, setIsAddingNewSchool] = useState(false); // New state variable to toggle visibility
+  const [isAddingNewSchool, setIsAddingNewSchool] = useState(false);
 
   const schoolsCollection = collection(db, "schools");
 
@@ -46,7 +45,7 @@ export default function SchoolDashboard() {
       const fetchedSchools: School[] = querySnapshot.docs.map((doc) => ({
         id: uuidv4(),
         firestoreId: doc.id,
-        schoolId: doc.data().schoolId || "",
+        schoolId: doc.id, // Use Firestore's doc ID as schoolId
         schoolName: doc.data().schoolName || "",
         schoolEmail: doc.data().schoolEmail || "",
         schoolPassword: "", // Do not fetch passwords
@@ -76,50 +75,42 @@ export default function SchoolDashboard() {
     );
   };
 
-
-
   const saveChanges = async (id: string) => {
     const school = schools.find((s) => s.id === id);
     if (school) {
       if (!school.firestoreId) {
-        // Create a new user in Firebase Authentication
         try {
           const { user } = await createUserWithEmailAndPassword(
             auth,
             school.schoolEmail,
-            school.schoolPassword 
+            school.schoolPassword
           );
-  
-          // Add school to Firestore with Auth UID (not displayed in UI)
+
           const docRef = await addDoc(schoolsCollection, {
-            schoolId: school.schoolId,
             schoolName: school.schoolName,
             schoolEmail: school.schoolEmail,
-            authUid: user.uid, // Use the uid here
+            authUid: user.uid,
             schoolLogo: school.schoolLogo,
             schoolAddress: school.schoolAddress,
             schoolModuleBoolean: school.schoolModuleBoolean,
-            schoolPassword: school.schoolPassword
           });
+
           setSchools((prevSchools) =>
             prevSchools.map((s) =>
-              s.id === id ? { ...s, firestoreId: docRef.id, isEditing: false } : s
+              s.id === id ? { ...s, firestoreId: docRef.id, schoolId: docRef.id, isEditing: false } : s
             )
           );
         } catch (error) {
           console.error("Error creating school in Auth:", error);
         }
       } else {
-        // Update existing school in Firestore
         const schoolDoc = doc(db, "schools", school.firestoreId);
         await updateDoc(schoolDoc, {
-          schoolId: school.schoolId,
           schoolName: school.schoolName,
           schoolEmail: school.schoolEmail,
           schoolLogo: school.schoolLogo,
           schoolAddress: school.schoolAddress,
           schoolModuleBoolean: school.schoolModuleBoolean,
-          schoolPassword: school.schoolPassword // Update password if changed
         });
         setSchools((prevSchools) =>
           prevSchools.map((s) =>
@@ -130,7 +121,6 @@ export default function SchoolDashboard() {
       console.log(`Changes saved for school with ID: ${id}`);
     }
   };
-  
 
   const deleteSchool = async (id: string) => {
     const school = schools.find((s) => s.id === id);
@@ -140,71 +130,42 @@ export default function SchoolDashboard() {
     }
     setSchools(schools.filter((school) => school.id !== id));
   };
-  // const deleteSchool = async (id: string) => {
-  //   const school = schools.find((s) => s.id === id);
-  //   if (school) {
-  //     try {
-  //       if (school.firestoreId && school.schoolEmail) {
-  //         // Delete the user from Firebase Authentication
-  //         const user = await auth.getUser(school.authUid); // Fetch the user object using the UID
-  //         if (user) {
-  //           await deleteUser(user); // Delete the user from Auth
-  //         }
-          
-  //         // Delete the school document from Firestore
-  //         const schoolDoc = doc(db, "schools", school.firestoreId);
-  //         await deleteDoc(schoolDoc);
-  //       }
-  //       // Update the local state to remove the deleted school
-  //       setSchools(schools.filter((s) => s.id !== id));
-  //       console.log(`Deleted school with ID: ${id}`);
-  //     } catch (error) {
-  //       console.error("Error deleting school:", error);
-  //     }
-  //   }
-  // };
-
- 
 
   const addNewSchool = async () => {
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
         newSchool.schoolEmail,
-        newSchool.schoolPassword // Use the password from the new school form
+        newSchool.schoolPassword
       );
-  
+
       const docRef = await addDoc(schoolsCollection, {
-        schoolId: newSchool.schoolId,
         schoolName: newSchool.schoolName,
         schoolEmail: newSchool.schoolEmail,
-        authUid: user.uid, // Store Auth UID in Firestore
+        authUid: user.uid,
         schoolLogo: newSchool.schoolLogo,
         schoolAddress: newSchool.schoolAddress,
         schoolModuleBoolean: newSchool.schoolModuleBoolean,
-        schoolPassword: newSchool.schoolPassword // Save the password securely in Firestore
       });
-  
+
       setSchools((prevSchools) => [
         ...prevSchools,
         {
-          id: uuidv4(), // Create a new id for the school
+          id: uuidv4(),
           firestoreId: docRef.id,
-          schoolId: newSchool.schoolId,
+          schoolId: docRef.id, // Assign Firestore's doc ID as schoolId
           schoolName: newSchool.schoolName,
           schoolEmail: newSchool.schoolEmail,
-          schoolPassword: "", // Do not fetch or store passwords
+          schoolPassword: "",
           schoolLogo: newSchool.schoolLogo,
           schoolAddress: newSchool.schoolAddress,
           schoolModuleBoolean: newSchool.schoolModuleBoolean,
-          isEditing: false, // Set editing to false by default
+          isEditing: false,
         },
       ]);
-  
-      // Clear the new school input fields after successful addition
+
       setNewSchool({
         id: uuidv4(),
-        schoolId: "",
         schoolName: "",
         schoolEmail: "",
         schoolPassword: "",
@@ -213,12 +174,11 @@ export default function SchoolDashboard() {
         schoolModuleBoolean: true,
         isEditing: true,
       });
-      setIsAddingNewSchool(false); // Hide the new school fields after adding
+      setIsAddingNewSchool(false);
     } catch (error) {
       console.error("Error adding new school:", error);
     }
   };
-  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
@@ -236,11 +196,6 @@ export default function SchoolDashboard() {
                   {school.isEditing ? (
                     <div className="space-y-2">
                       <Input
-                        value={school.schoolId}
-                        onChange={(e) => handleInputChange(school.id, "schoolId", e.target.value)}
-                        placeholder="School ID"
-                      />
-                      <Input
                         value={school.schoolName}
                         onChange={(e) => handleInputChange(school.id, "schoolName", e.target.value)}
                         placeholder="School Name"
@@ -251,7 +206,7 @@ export default function SchoolDashboard() {
                         placeholder="School Email"
                       />
                       <Input
-                        type="password" // Use password type for security
+                        type="password"
                         value={school.schoolPassword}
                         onChange={(e) => handleInputChange(school.id, "schoolPassword", e.target.value)}
                         placeholder="School Password"
@@ -279,7 +234,6 @@ export default function SchoolDashboard() {
                     <div>
                       <h4 className="font-medium">{school.schoolName}</h4>
                       <p className="text-sm text-muted-foreground">{school.schoolEmail}</p>
-                      {/* Display the masked password */}
                       <p className="text-sm text-muted-foreground">Password: ********</p>
                     </div>
                   )}
@@ -299,8 +253,7 @@ export default function SchoolDashboard() {
                       size="sm"
                       onClick={() => toggleEdit(school.id)}
                     >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
+                      <Edit3 className="w-4 h-4 mr-1" /> Edit
                     </Button>
                   )}
                   <Button
@@ -308,60 +261,71 @@ export default function SchoolDashboard() {
                     size="sm"
                     onClick={() => deleteSchool(school.id)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    <Trash2 className="w-4 h-4 mr-1" /> Delete
                   </Button>
                 </div>
               </li>
             ))}
           </ul>
-          <div className="mt-4">
-            <Button onClick={() => setIsAddingNewSchool(!isAddingNewSchool)}>
-              {isAddingNewSchool ? "Cancel" : "Add New School"}
+          {!isAddingNewSchool && (
+            <Button
+              variant="outline"
+              onClick={() => setIsAddingNewSchool(true)}
+              className="mt-4 w-full"
+            >
+              Add New School
             </Button>
-          </div>
+          )}
           {isAddingNewSchool && (
-            <div className="mt-4 space-y-2">
-              <Input
-                value={newSchool.schoolId}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolId: e.target.value })}
-                placeholder="School ID"
-              />
+            <div className="space-y-2 mt-4">
               <Input
                 value={newSchool.schoolName}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolName: e.target.value })}
+                onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolName: e.target.value }))}
                 placeholder="School Name"
               />
               <Input
                 value={newSchool.schoolEmail}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolEmail: e.target.value })}
+                onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolEmail: e.target.value }))}
                 placeholder="School Email"
               />
               <Input
-                type="password" // Use password type for security
+                type="password"
                 value={newSchool.schoolPassword}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolPassword: e.target.value })}
+                onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolPassword: e.target.value }))}
                 placeholder="School Password"
               />
               <Input
                 value={newSchool.schoolLogo}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolLogo: e.target.value })}
+                onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolLogo: e.target.value }))}
                 placeholder="Logo URL"
               />
               <Input
                 value={newSchool.schoolAddress}
-                onChange={(e) => setNewSchool({ ...newSchool, schoolAddress: e.target.value })}
+                onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolAddress: e.target.value }))}
                 placeholder="Address"
               />
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={newSchool.schoolModuleBoolean}
-                  onChange={(e) => setNewSchool({ ...newSchool, schoolModuleBoolean: e.target.checked })}
+                  onChange={(e) => setNewSchool((prev) => ({ ...prev, schoolModuleBoolean: e.target.checked }))}
                 />
                 <span className="ml-2">Active</span>
               </label>
-              <Button onClick={addNewSchool}>Add School</Button>
+              <Button
+                variant="default"
+                onClick={addNewSchool}
+                className="mt-2 w-full"
+              >
+                Save New School
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddingNewSchool(false)}
+                className="w-full"
+              >
+                Cancel
+              </Button>
             </div>
           )}
         </CardContent>
