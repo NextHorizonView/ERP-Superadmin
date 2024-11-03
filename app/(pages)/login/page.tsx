@@ -29,7 +29,7 @@ export default function Login() {
 
       // Redirect to homepage after successful login
 
-      router.push("/superAdmin");
+      router.push("/");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast({
