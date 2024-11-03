@@ -29,7 +29,7 @@ export default function SignUp() {
 
       // Redirect to homepage after successful login
 
-      router.push("/superadmin");
+      router.push("/");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast({

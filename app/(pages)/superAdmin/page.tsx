@@ -1,7 +1,3 @@
-
-
-//
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,17 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { db } from "@/firebaseConfig";
+import { auth, db } from "@/firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 interface Admin {
   id: number;
-  firestoreId?: string; 
+  firestoreId?: string;
   superAdminId: string;
   superAdminName: string;
   superAdminEmail: string;
   superAdminProfileImg: string;
   superAdminProfilePhoneNumber: string;
+  password: string; 
   isEditing: boolean;
 }
 
@@ -32,8 +30,10 @@ export default function SuperAdminPage() {
     superAdminEmail: "",
     superAdminProfileImg: "",
     superAdminProfilePhoneNumber: "",
+    password: "", 
     isEditing: true,
   });
+  const [showNewAdminForm, setShowNewAdminForm] = useState(false); // State to control form visibility
 
   const adminsCollection = collection(db, "superadmins");
 
@@ -49,6 +49,7 @@ export default function SuperAdminPage() {
         superAdminEmail: doc.data().superAdminEmail || "",
         superAdminProfileImg: doc.data().superAdminProfileImg || "",
         superAdminProfilePhoneNumber: doc.data().superAdminProfilePhoneNumber || "",
+        password: "", 
         isEditing: false,
       }));
       setAdmins(fetchedAdmins);
@@ -118,17 +119,46 @@ export default function SuperAdminPage() {
     setAdmins(admins.filter((admin) => admin.id !== id));
   };
 
-  const addNewAdmin = () => {
-    setAdmins((prevAdmins) => [...prevAdmins, { ...newAdmin }]);
-    setNewAdmin({
-      id: Date.now(),
-      superAdminId: "",
-      superAdminName: "",
-      superAdminEmail: "",
-      superAdminProfileImg: "",
-      superAdminProfilePhoneNumber: "",
-      isEditing: true,
-    });
+  const addNewAdmin = async () => {
+    try {
+      // Create the super admin user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newAdmin.superAdminEmail,
+        newAdmin.password
+      );
+
+      // Get the user UID and add it to Firestore
+      const docRef = await addDoc(adminsCollection, {
+        superAdminId: newAdmin.superAdminId,
+        superAdminName: newAdmin.superAdminName,
+        superAdminEmail: newAdmin.superAdminEmail,
+        superAdminProfileImg: newAdmin.superAdminProfileImg,
+        superAdminProfilePhoneNumber: newAdmin.superAdminProfilePhoneNumber,
+      });
+
+      setAdmins((prevAdmins) => [
+        ...prevAdmins,
+        { ...newAdmin, firestoreId: docRef.id, isEditing: false },
+      ]);
+
+      // Clear the newAdmin state to reset the form fields
+      setNewAdmin({
+        id: Date.now(),
+        superAdminId: "",
+        superAdminName: "",
+        superAdminEmail: "",
+        superAdminProfileImg: "",
+        superAdminProfilePhoneNumber: "",
+        password: "", // Clear password
+        isEditing: true,
+      });
+      setShowNewAdminForm(false); // Hide the form after adding the admin
+      console.log("Super admin created successfully!");
+    } catch (error) {
+      console.error("Error creating super admin:", error);
+      // Handle errors here (e.g., show a toast notification)
+    }
   };
 
   return (
@@ -226,10 +256,66 @@ export default function SuperAdminPage() {
               </li>
             ))}
           </ul>
+          {showNewAdminForm && (
+            <div className="space-y-2 mt-4">
+              <Input
+                value={newAdmin.superAdminId}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({ ...prevAdmin, superAdminId: e.target.value }))
+                }
+                placeholder="SuperAdmin ID"
+              />
+              <Input
+                value={newAdmin.superAdminName}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({ ...prevAdmin, superAdminName: e.target.value }))
+                }
+                placeholder="SuperAdmin Name"
+              />
+              <Input
+                value={newAdmin.superAdminEmail}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({ ...prevAdmin, superAdminEmail: e.target.value }))
+                }
+                placeholder="SuperAdmin Email"
+              />
+              <Input
+                value={newAdmin.superAdminProfileImg}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({ ...prevAdmin, superAdminProfileImg: e.target.value }))
+                }
+                placeholder="Profile Image URL"
+              />
+              <Input
+                value={newAdmin.superAdminProfilePhoneNumber}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({
+                    ...prevAdmin,
+                    superAdminProfilePhoneNumber: e.target.value,
+                  }))
+                }
+                placeholder="Phone Number"
+              />
+              <Input
+                value={newAdmin.password}
+                onChange={(e) =>
+                  setNewAdmin((prevAdmin) => ({ ...prevAdmin, password: e.target.value }))
+                }
+                placeholder="Password"
+                type="password"
+              />
+              <Button onClick={addNewAdmin} className="w-full">
+                Add New Super Admin
+              </Button>
+            </div>
+          )}
+          {!showNewAdminForm && (
+            <Button onClick={() => setShowNewAdminForm(true)} className="w-full mt-4">
+              Add New Admin
+            </Button>
+          )}
         </CardContent>
       </Card>
-      <Button className="mt-4" onClick={addNewAdmin}>Add New Admin</Button>
     </div>
   );
 }
-
