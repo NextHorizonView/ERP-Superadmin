@@ -30,7 +30,7 @@ const authItems = [
   },
   {
     title: "Superadmin Dashboard",
-    url: "/superAdmin",
+    url: "/superadmin",
     icon: Settings,
   },
 ];
@@ -40,11 +40,6 @@ const unauthItems = [
     title: "Login",
     url: "/login",
     icon: Search,
-  },
-  {
-    title: "Signup",
-    url: "/signup",
-    icon: Settings,
   },
 ];
 
