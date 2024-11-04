@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebaseConfig.js"; // Import Firebase auth
 
-export default function SignUp() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,7 @@ export default function SignUp() {
 
       // Redirect to homepage after successful login
 
-      router.push("/");
+      router.push("/superadmin");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast({
@@ -44,11 +44,12 @@ export default function SignUp() {
       }
     }
   };
+
   return (
     <div className="flex h-screen mx-auto w-auto items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Log In</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,7 +75,7 @@ export default function SignUp() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing up..." : "Sign Up"}
+              {isLoading ? "Logging in..." : "Log In"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
