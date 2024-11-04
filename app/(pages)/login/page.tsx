@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebaseConfig.js"; // Import Firebase auth
 
-export default function Login() {
+export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,12 +44,11 @@ export default function Login() {
       }
     }
   };
-
   return (
     <div className="flex h-screen mx-auto w-auto items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle className="text-2xl">Log In</CardTitle>
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +74,7 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Log In"}
+              {isLoading ? "Signing up..." : "Sign Up"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

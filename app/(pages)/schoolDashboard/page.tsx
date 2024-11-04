@@ -1,21 +1,20 @@
-
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { db } from "@/firebaseConfig";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
-import {Trash2, Edit3 } from "lucide-react";
-// import Image from "next/image";
+import { db, auth, storage } from "@/firebaseConfig"; 
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { Trash2, Edit3 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 interface School {
   id: string;
   firestoreId?: string;
-  schoolId: string;
+  schoolId?: string; // Use Firestore's doc ID as schoolId
   schoolName: string;
   schoolEmail: string;
   schoolPassword: string;
@@ -23,35 +22,36 @@ interface School {
   schoolAddress: string;
   schoolModuleBoolean: boolean;
   isEditing: boolean;
+  schoolLogoFile?: File | null;
 }
 
 export default function SchoolDashboard() {
   const [schools, setSchools] = useState<School[]>([]);
   const [newSchool, setNewSchool] = useState<School>({
     id: uuidv4(),
-    schoolId: "",
     schoolName: "",
     schoolEmail: "",
     schoolPassword: "",
     schoolLogo: "",
     schoolAddress: "",
-    schoolModuleBoolean: true, // Default to active
+    schoolModuleBoolean: true,
     isEditing: true,
+    schoolLogoFile: null,
   });
+  const [isAddingNewSchool, setIsAddingNewSchool] = useState(false);
 
   const schoolsCollection = collection(db, "schools");
 
-  // Fetch schools from Firestore
   useEffect(() => {
     const fetchSchools = async () => {
       const querySnapshot = await getDocs(schoolsCollection);
       const fetchedSchools: School[] = querySnapshot.docs.map((doc) => ({
         id: uuidv4(),
         firestoreId: doc.id,
-        schoolId: doc.data().schoolId || "",
+        schoolId: doc.id,
         schoolName: doc.data().schoolName || "",
         schoolEmail: doc.data().schoolEmail || "",
-        schoolPassword: doc.data().schoolPassword || "",
+        schoolPassword: "", // Do not fetch passwords
         schoolLogo: doc.data().schoolLogo || "",
         schoolAddress: doc.data().schoolAddress || "",
         schoolModuleBoolean: doc.data().schoolModuleBoolean || false,
@@ -70,6 +70,14 @@ export default function SchoolDashboard() {
     );
   };
 
+  const handleFileChange = (id: string, file: File | null) => {
+    setSchools((prevSchools) =>
+      prevSchools.map((school) =>
+        school.id === id ? { ...school, schoolLogoFile: file } : school
+      )
+    );
+  };
+
   const handleInputChange = (id: string, field: keyof School, value: string | boolean) => {
     setSchools((prevSchools) =>
       prevSchools.map((school) =>
@@ -78,40 +86,57 @@ export default function SchoolDashboard() {
     );
   };
 
+  const uploadLogo = async (file: File) => {
+    const storageRef = ref(storage, `schoolLogos/${uuidv4()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
+
   const saveChanges = async (id: string) => {
     const school = schools.find((s) => s.id === id);
     if (school) {
+      let logoUrl = school.schoolLogo;
+      if (school.schoolLogoFile) {
+        logoUrl = await uploadLogo(school.schoolLogoFile);
+      }
+
       if (!school.firestoreId) {
-        // Add new school to Firestore
-        const docRef = await addDoc(schoolsCollection, {
-          schoolId: school.schoolId,
-          schoolName: school.schoolName,
-          schoolEmail: school.schoolEmail,
-          schoolPassword: school.schoolPassword,
-          schoolLogo: school.schoolLogo,
-          schoolAddress: school.schoolAddress,
-          schoolModuleBoolean: school.schoolModuleBoolean,
-        });
-        setSchools((prevSchools) =>
-          prevSchools.map((s) =>
-            s.id === id ? { ...s, firestoreId: docRef.id, isEditing: false } : s
-          )
-        );
+        try {
+          const { user } = await createUserWithEmailAndPassword(
+            auth,
+            school.schoolEmail,
+            school.schoolPassword
+          );
+
+          const docRef = await addDoc(schoolsCollection, {
+            schoolName: school.schoolName,
+            schoolEmail: school.schoolEmail,
+            Uid: user.uid,
+            schoolLogo: logoUrl,
+            schoolAddress: school.schoolAddress,
+            schoolModuleBoolean: school.schoolModuleBoolean,
+          });
+
+          setSchools((prevSchools) =>
+            prevSchools.map((s) =>
+              s.id === id ? { ...s, firestoreId: docRef.id, schoolId: docRef.id, isEditing: false, schoolLogo: logoUrl } : s
+            )
+          );
+        } catch (error) {
+          console.error("Error creating school in Auth:", error);
+        }
       } else {
-        // Update existing school in Firestore
         const schoolDoc = doc(db, "schools", school.firestoreId);
         await updateDoc(schoolDoc, {
-          schoolId: school.schoolId,
           schoolName: school.schoolName,
           schoolEmail: school.schoolEmail,
-          schoolPassword: school.schoolPassword,
-          schoolLogo: school.schoolLogo,
+          schoolLogo: logoUrl,
           schoolAddress: school.schoolAddress,
           schoolModuleBoolean: school.schoolModuleBoolean,
         });
         setSchools((prevSchools) =>
           prevSchools.map((s) =>
-            s.id === id ? { ...s, isEditing: false } : s
+            s.id === id ? { ...s, isEditing: false, schoolLogo: logoUrl } : s
           )
         );
       }
@@ -123,25 +148,74 @@ export default function SchoolDashboard() {
     const school = schools.find((s) => s.id === id);
     if (school?.firestoreId) {
       const schoolDoc = doc(db, "schools", school.firestoreId);
-      await deleteDoc(schoolDoc); // Delete from Firestore
+      await deleteDoc(schoolDoc);
     }
     setSchools(schools.filter((school) => school.id !== id));
   };
 
-  const addNewSchool = () => {
-    setSchools((prevSchools) => [...prevSchools, { ...newSchool }]);
-    setNewSchool({
-      id: uuidv4(),
-      schoolId: "",
-      schoolName: "",
-      schoolEmail: "",
-      schoolPassword: "",
-      schoolLogo: "",
-      schoolAddress: "",
-      schoolModuleBoolean: true,
-      isEditing: true,
-    });
+  
+  const addNewSchool = async () => {
+    try {
+      let logoUrl = "";
+      if (newSchool.schoolLogoFile) {
+        logoUrl = await uploadLogo(newSchool.schoolLogoFile);
+      }
+  
+      // Step 1: Create the user in Firebase Auth
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        newSchool.schoolEmail,
+        newSchool.schoolPassword
+      );
+  
+      // Step 2: Update the Auth profile with additional details if needed
+      await updateProfile(user, { displayName: newSchool.schoolName });
+  
+      // Step 3: Use the Auth UID as the Firestore document ID
+      await setDoc(doc(db, "schools", user.uid), {
+        schoolName: newSchool.schoolName,
+        schoolEmail: newSchool.schoolEmail,
+        Uid: user.uid, // Use the Auth UID as the document ID in Firestore
+        schoolLogo: logoUrl,
+        schoolAddress: newSchool.schoolAddress,
+        schoolModuleBoolean: newSchool.schoolModuleBoolean,
+      });
+  
+      // Update the local state with new school data
+      setSchools((prevSchools) => [
+        ...prevSchools,
+        {
+          id: uuidv4(),
+          firestoreId: user.uid, // Use the same UID here
+          schoolId: user.uid,    // Same UID for consistency
+          schoolName: newSchool.schoolName,
+          schoolEmail: newSchool.schoolEmail,
+          schoolPassword: "",
+          schoolLogo: logoUrl,
+          schoolAddress: newSchool.schoolAddress,
+          schoolModuleBoolean: newSchool.schoolModuleBoolean,
+          isEditing: false,
+        },
+      ]);
+  
+      // Reset the new school state
+      setNewSchool({
+        id: uuidv4(),
+        schoolName: "",
+        schoolEmail: "",
+        schoolPassword: "",
+        schoolLogo: "",
+        schoolAddress: "",
+        schoolModuleBoolean: true,
+        isEditing: true,
+        schoolLogoFile: null,
+      });
+      setIsAddingNewSchool(false);
+    } catch (error) {
+      console.error("Error adding new school:", error);
+    }
   };
+  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
@@ -159,11 +233,6 @@ export default function SchoolDashboard() {
                   {school.isEditing ? (
                     <div className="space-y-2">
                       <Input
-                        value={school.schoolId}
-                        onChange={(e) => handleInputChange(school.id, "schoolId", e.target.value)}
-                        placeholder="School ID"
-                      />
-                      <Input
                         value={school.schoolName}
                         onChange={(e) => handleInputChange(school.id, "schoolName", e.target.value)}
                         placeholder="School Name"
@@ -174,15 +243,15 @@ export default function SchoolDashboard() {
                         placeholder="School Email"
                       />
                       <Input
+                        type="password"
                         value={school.schoolPassword}
                         onChange={(e) => handleInputChange(school.id, "schoolPassword", e.target.value)}
                         placeholder="School Password"
-                        type="password"
                       />
-                      <Input
-                        value={school.schoolLogo}
-                        onChange={(e) => handleInputChange(school.id, "schoolLogo", e.target.value)}
-                        placeholder="Logo URL"
+                      <input
+                        type="file"
+                        onChange={(e) => handleFileChange(school.id, e.target.files ? e.target.files[0] : null)}
+                        accept="image/*"
                       />
                       <Input
                         value={school.schoolAddress}
@@ -200,45 +269,82 @@ export default function SchoolDashboard() {
                     </div>
                   ) : (
                     <div>
-                      <h4 className="font-medium">{school.schoolName}</h4>
-                      <p className="text-sm text-muted-foreground">{school.schoolEmail}</p>
+                      <h4 className="text-lg font-bold">{school.schoolName}</h4>
+                      <img src={school.schoolLogo} alt="School Logo" className="h-10 w-10 object-cover rounded-full" />
+                      <p>Email: {school.schoolEmail}</p>
+                      <p>Address: {school.schoolAddress}</p>
+                      <p>Module Active: {school.schoolModuleBoolean ? "Yes" : "No"}</p>
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => toggleEdit(school.id)}>
+                    {school.isEditing ? "Cancel" : <Edit3 />}
+                  </Button>
                   {school.isEditing ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => saveChanges(school.id)}
-                    >
-                      Save
-                    </Button>
+                    <Button onClick={() => saveChanges(school.id)}>Save</Button>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleEdit(school.id)}
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
+                    <Button variant="destructive" onClick={() => deleteSchool(school.id)}>
+                      <Trash2 />
                     </Button>
                   )}
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteSchool(school.id)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
                 </div>
               </li>
             ))}
           </ul>
+          {isAddingNewSchool && (
+            <div className="mt-4 space-y-2">
+              <Input
+                value={newSchool.schoolName}
+                onChange={(e) => setNewSchool({ ...newSchool, schoolName: e.target.value })}
+                placeholder="School Name"
+              />
+              <Input
+                value={newSchool.schoolEmail}
+                onChange={(e) => setNewSchool({ ...newSchool, schoolEmail: e.target.value })}
+                placeholder="School Email"
+              />
+              <Input
+                type="password"
+                value={newSchool.schoolPassword}
+                onChange={(e) => setNewSchool({ ...newSchool, schoolPassword: e.target.value })}
+                placeholder="School Password"
+              />
+              <input
+                type="file"
+                onChange={(e) =>
+                  setNewSchool({ ...newSchool, schoolLogoFile: e.target.files ? e.target.files[0] : null })
+                }
+                accept="image/*"
+              />
+              <Input
+                value={newSchool.schoolAddress}
+                onChange={(e) => setNewSchool({ ...newSchool, schoolAddress: e.target.value })}
+                placeholder="Address"
+              />
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={newSchool.schoolModuleBoolean}
+                  onChange={(e) => setNewSchool({ ...newSchool, schoolModuleBoolean: e.target.checked })}
+                />
+                <span className="ml-2">Active</span>
+              </label>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsAddingNewSchool(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={addNewSchool}>Add School</Button>
+              </div>
+            </div>
+          )}
+          {!isAddingNewSchool && (
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => setIsAddingNewSchool(true)}>Add New School</Button>
+            </div>
+          )}
         </CardContent>
       </Card>
-      <Button className="mt-4" onClick={addNewSchool}>Add New School</Button>
     </div>
   );
 }

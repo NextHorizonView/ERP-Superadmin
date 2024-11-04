@@ -41,11 +41,6 @@ const unauthItems = [
     url: "/login",
     icon: Search,
   },
-  {
-    title: "Signup",
-    url: "/signup",
-    icon: Settings,
-  },
 ];
 
 export function AppSidebar() {
