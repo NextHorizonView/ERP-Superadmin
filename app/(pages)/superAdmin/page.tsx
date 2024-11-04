@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { auth, db, storage } from "@/firebaseConfig";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface Admin {
   id: number;
   firestoreId?: string;
-  superAdminId: string;
+  Uid: string;
   superAdminName: string;
   superAdminEmail: string;
   superAdminProfileImg: string;
@@ -27,7 +27,7 @@ export default function SuperAdminPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [newAdmin, setNewAdmin] = useState<Admin>({
     id: Date.now(),
-    superAdminId: "",
+    Uid: "",
     superAdminName: "",
     superAdminEmail: "",
     superAdminProfileImg: "",
@@ -47,7 +47,7 @@ export default function SuperAdminPage() {
       const fetchedAdmins: Admin[] = querySnapshot.docs.map((doc, index) => ({
         id: index + 1,
         firestoreId: doc.id,
-        superAdminId: doc.data().superAdminId || "",
+        Uid: doc.data().Uid || "",
         superAdminName: doc.data().superAdminName || "",
         superAdminEmail: doc.data().superAdminEmail || "",
         superAdminProfileImg: doc.data().superAdminProfileImg || "",
@@ -94,7 +94,7 @@ export default function SuperAdminPage() {
     if (admin) {
       if (!admin.firestoreId) {
         const docRef = await addDoc(adminsCollection, {
-          superAdminId: admin.superAdminId,
+          Uid: admin.Uid,
           superAdminName: admin.superAdminName,
           superAdminEmail: admin.superAdminEmail,
           superAdminProfileImg: admin.superAdminProfileImg,
@@ -140,30 +140,33 @@ export default function SuperAdminPage() {
         await uploadBytes(storageRef, newAdmin.superAdminProfileImgFile);
         profileImgUrl = await getDownloadURL(storageRef);
       }
-
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        newAdmin.superAdminEmail,
-        newAdmin.password
-      );
+  
+      // Create user in Firebase Auth with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, newAdmin.superAdminEmail, newAdmin.password);
+  
+      // Use the Firebase Auth UID as the Firestore document ID
       const uid = userCredential.user.uid;
-
-      const docRef = await addDoc(adminsCollection, {
-        superAdminId: uid,
+      const docRef = doc(db, "superadmins", uid);
+      
+      // Add the new admin data to Firestore, using the Auth UID as the document ID
+      await setDoc(docRef, {
+        Uid: uid,
         superAdminName: newAdmin.superAdminName,
         superAdminEmail: newAdmin.superAdminEmail,
         superAdminProfileImg: profileImgUrl,
         superAdminProfilePhoneNumber: newAdmin.superAdminProfilePhoneNumber,
       });
-
+  
+      // Update the state with the new admin
       setAdmins((prevAdmins) => [
         ...prevAdmins,
-        { ...newAdmin, firestoreId: docRef.id, superAdminId: uid, superAdminProfileImg: profileImgUrl, isEditing: false },
+        { ...newAdmin, firestoreId: uid, Uid: uid, superAdminProfileImg: profileImgUrl, isEditing: false },
       ]);
       
+      // Reset the new admin form
       setNewAdmin({
         id: Date.now(),
-        superAdminId: "",
+        Uid: "",
         superAdminName: "",
         superAdminEmail: "",
         superAdminProfileImg: "",
@@ -177,6 +180,7 @@ export default function SuperAdminPage() {
       console.error("Error creating super admin:", error);
     }
   };
+  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">

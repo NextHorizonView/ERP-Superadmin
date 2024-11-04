@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { db, auth, storage } from "@/firebaseConfig"; 
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { Trash2, Edit3 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -111,7 +111,7 @@ export default function SchoolDashboard() {
           const docRef = await addDoc(schoolsCollection, {
             schoolName: school.schoolName,
             schoolEmail: school.schoolEmail,
-            authUid: user.uid,
+            Uid: user.uid,
             schoolLogo: logoUrl,
             schoolAddress: school.schoolAddress,
             schoolModuleBoolean: school.schoolModuleBoolean,
@@ -153,34 +153,41 @@ export default function SchoolDashboard() {
     setSchools(schools.filter((school) => school.id !== id));
   };
 
+  
   const addNewSchool = async () => {
     try {
       let logoUrl = "";
       if (newSchool.schoolLogoFile) {
         logoUrl = await uploadLogo(newSchool.schoolLogoFile);
       }
-
+  
+      // Step 1: Create the user in Firebase Auth
       const { user } = await createUserWithEmailAndPassword(
         auth,
         newSchool.schoolEmail,
         newSchool.schoolPassword
       );
-
-      const docRef = await addDoc(schoolsCollection, {
+  
+      // Step 2: Update the Auth profile with additional details if needed
+      await updateProfile(user, { displayName: newSchool.schoolName });
+  
+      // Step 3: Use the Auth UID as the Firestore document ID
+      await setDoc(doc(db, "schools", user.uid), {
         schoolName: newSchool.schoolName,
         schoolEmail: newSchool.schoolEmail,
-        authUid: user.uid,
+        Uid: user.uid, // Use the Auth UID as the document ID in Firestore
         schoolLogo: logoUrl,
         schoolAddress: newSchool.schoolAddress,
         schoolModuleBoolean: newSchool.schoolModuleBoolean,
       });
-
+  
+      // Update the local state with new school data
       setSchools((prevSchools) => [
         ...prevSchools,
         {
           id: uuidv4(),
-          firestoreId: docRef.id,
-          schoolId: docRef.id,
+          firestoreId: user.uid, // Use the same UID here
+          schoolId: user.uid,    // Same UID for consistency
           schoolName: newSchool.schoolName,
           schoolEmail: newSchool.schoolEmail,
           schoolPassword: "",
@@ -190,7 +197,8 @@ export default function SchoolDashboard() {
           isEditing: false,
         },
       ]);
-
+  
+      // Reset the new school state
       setNewSchool({
         id: uuidv4(),
         schoolName: "",
@@ -207,6 +215,7 @@ export default function SchoolDashboard() {
       console.error("Error adding new school:", error);
     }
   };
+  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
