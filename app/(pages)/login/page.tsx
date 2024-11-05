@@ -48,7 +48,7 @@ export default function SignUp() {
     <div className="flex h-screen mx-auto w-auto items-center justify-center">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Login SuperAdmin</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -37,8 +37,13 @@ const authItems = [
 
 const unauthItems = [
   {
-    title: "Login",
+    title: "LoginSuperAdmin",
     url: "/login",
+    icon: Search,
+  },
+  {
+    title: "LoginforMainERP",
+    url: "/loginformainerp",
     icon: Search,
   },
 ];

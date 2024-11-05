@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,19 +16,17 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Attempt to create a new user with email and password
       await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: "SignUp successful!" });
 
-      // Redirect to homepage after successful signup
-      router.push("/superAdmin");
+      router.push("/");
     } catch (error: unknown) {
       const err = error as Error;
       toast({
@@ -44,7 +42,9 @@ export default function SignUp() {
     <div className="flex items-center justify-center min-h-screen  ">
       <Card className="w-[500px] shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Sign Up</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Sign Up For mainERP
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +75,10 @@ export default function SignUp() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="underline hover:text-primary">
+            <Link
+              href="/loginformainerp"
+              className="underline hover:text-primary"
+            >
               Log in
             </Link>
           </p>
