@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Loader from "@/components/ui/Loader";
 import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { auth, db, storage } from "@/firebaseConfig";
@@ -37,6 +38,7 @@ export default function SuperAdminPage() {
     superAdminProfileImgFile: null,
   });
   const [showNewAdminForm, setShowNewAdminForm] = useState(false);
+  const [loading, setLoading] = useState<{ [key: number]: boolean }>({});
 
   const adminsCollection = collection(db, "superadmins");
 
@@ -90,6 +92,7 @@ export default function SuperAdminPage() {
   };
 
   const saveChanges = async (id: number) => {
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: true }));
     const admin = admins.find((a) => a.id === id);
     if (admin) {
       if (!admin.firestoreId) {
@@ -119,11 +122,13 @@ export default function SuperAdminPage() {
           )
         );
       }
+      setLoading((prevLoading) => ({ ...prevLoading, [id]: false }));
       console.log(`Changes saved for admin with ID: ${id}`);
     }
   };
 
   const deleteAdmin = async (id: number) => {
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: true }));
     const admin = admins.find((a) => a.id === id);
     if (admin?.firestoreId) {
       const adminDoc = doc(db, "superadmins", admin.firestoreId);
@@ -133,6 +138,7 @@ export default function SuperAdminPage() {
   };
 
   const addNewAdmin = async () => {
+    setLoading((prevLoading) => ({ ...prevLoading, newAdmin: true }));
     try {
       let profileImgUrl = "";
       if (newAdmin.superAdminProfileImgFile) {
@@ -179,6 +185,7 @@ export default function SuperAdminPage() {
     } catch (error) {
       console.error("Error creating super admin:", error);
     }
+    setLoading((prevLoading) => ({ ...prevLoading, newAdmin: false }));
   };
   
 
@@ -227,9 +234,12 @@ export default function SuperAdminPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {admin.isEditing ? (
-                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => saveChanges(admin.id)}>
-                      Save
-                    </Button>
+                   <Button
+                   onClick={() => saveChanges(admin.id)}
+                   disabled={loading[admin.id]}
+                 >
+                   {loading[admin.id] ? <Loader /> : "Save"}
+                 </Button>
                   ) : (
                     <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => toggleEdit(admin.id)}>
                       <Edit3 className="w-4 h-4 mr-2" />
