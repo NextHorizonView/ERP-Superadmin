@@ -18,13 +18,18 @@ export default function AdminDetailsPage() {
   const [admin, setAdmin] = useState<Admin | null>(null);
 
   useEffect(() => {
+    if (!params?.id) {
+      return; // Return early if there's no id parameter
+    }
+    
     const mockAdmins = [
       { id: 1, name: "Admin 1", email: "admin1@example.com" },
       { id: 2, name: "Admin 2", email: "admin2@example.com" },
     ];
+    
     const foundAdmin = mockAdmins.find((a) => a.id === Number(params.id));
     setAdmin(foundAdmin || null);
-  }, [params.id]);
+  }, [params?.id]); // Add optional chaining here too to prevent errors
 
   if (!admin) {
     return <div>Loading...</div>;

@@ -8,13 +8,14 @@ import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { auth, db, storage } from "@/firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, signInWithCustomToken } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import admin from "firebase-admin";
 
 interface Admin {
   id: number;
   firestoreId?: string;
-  Uid: string;
+  superAdminId: string;
   superAdminName: string;
   superAdminEmail: string;
   superAdminProfileImg: string;
@@ -28,7 +29,7 @@ export default function SuperAdminPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [newAdmin, setNewAdmin] = useState<Admin>({
     id: Date.now(),
-    Uid: "",
+    superAdminId: "",
     superAdminName: "",
     superAdminEmail: "",
     superAdminProfileImg: "",
@@ -49,7 +50,7 @@ export default function SuperAdminPage() {
       const fetchedAdmins: Admin[] = querySnapshot.docs.map((doc, index) => ({
         id: index + 1,
         firestoreId: doc.id,
-        Uid: doc.data().Uid || "",
+        superAdminId: doc.data().superAdminId || "",
         superAdminName: doc.data().superAdminName || "",
         superAdminEmail: doc.data().superAdminEmail || "",
         superAdminProfileImg: doc.data().superAdminProfileImg || "",
@@ -97,7 +98,7 @@ export default function SuperAdminPage() {
     if (admin) {
       if (!admin.firestoreId) {
         const docRef = await addDoc(adminsCollection, {
-          Uid: admin.Uid,
+          superAdminId: admin.superAdminId,
           superAdminName: admin.superAdminName,
           superAdminEmail: admin.superAdminEmail,
           superAdminProfileImg: admin.superAdminProfileImg,
@@ -126,16 +127,40 @@ export default function SuperAdminPage() {
       console.log(`Changes saved for admin with ID: ${id}`);
     }
   };
-
   const deleteAdmin = async (id: number) => {
     setLoading((prevLoading) => ({ ...prevLoading, [id]: true }));
     const admin = admins.find((a) => a.id === id);
     if (admin?.firestoreId) {
-      const adminDoc = doc(db, "superadmins", admin.firestoreId);
-      await deleteDoc(adminDoc);
+      try {
+        // Delete the admin from Firestore
+        const adminDoc = doc(db, "superadmins", admin.firestoreId);
+        await deleteDoc(adminDoc);
+        
+        // Send a request to the backend API to delete the admin from Firebase Authentication
+        if (admin.superAdminId) {
+          const response = await fetch('/api/deleteAdmin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ superAdminId: admin.superAdminId }),
+          });
+  
+          if (!response.ok) {
+            throw new Error('Failed to delete admin from Firebase Authentication');
+          }
+          console.log(`User with ID ${admin.superAdminId} deleted from Firebase Authentication`);
+        }
+  
+        // Remove admin from state
+        setAdmins(admins.filter((admin) => admin.id !== id));
+      } catch (error) {
+        console.error("Error deleting admin:", error);
+      }
     }
-    setAdmins(admins.filter((admin) => admin.id !== id));
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: false }));
   };
+  
 
   const addNewAdmin = async () => {
     setLoading((prevLoading) => ({ ...prevLoading, newAdmin: true }));
@@ -147,47 +172,46 @@ export default function SuperAdminPage() {
         profileImgUrl = await getDownloadURL(storageRef);
       }
   
-      // Create user in Firebase Auth with email and password
-      const userCredential = await createUserWithEmailAndPassword(auth, newAdmin.superAdminEmail, newAdmin.password);
-  
-      // Use the Firebase Auth UID as the Firestore document ID
-      const uid = userCredential.user.uid;
-      const docRef = doc(db, "superadmins", uid);
-      
-      // Add the new admin data to Firestore, using the Auth UID as the document ID
-      await setDoc(docRef, {
-        Uid: uid,
-        superAdminName: newAdmin.superAdminName,
-        superAdminEmail: newAdmin.superAdminEmail,
-        superAdminProfileImg: profileImgUrl,
-        superAdminProfilePhoneNumber: newAdmin.superAdminProfilePhoneNumber,
+      const response = await fetch("http://localhost:3000/api/createAdmin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          superAdminName: newAdmin.superAdminName,
+          superAdminEmail: newAdmin.superAdminEmail,
+          password: newAdmin.password,
+          superAdminProfilePhoneNumber: newAdmin.superAdminProfilePhoneNumber,
+          profileImgUrl,
+        }),
       });
   
-      // Update the state with the new admin
-      setAdmins((prevAdmins) => [
-        ...prevAdmins,
-        { ...newAdmin, firestoreId: uid, Uid: uid, superAdminProfileImg: profileImgUrl, isEditing: false },
-      ]);
-      
-      // Reset the new admin form
-      setNewAdmin({
-        id: Date.now(),
-        Uid: "",
-        superAdminName: "",
-        superAdminEmail: "",
-        superAdminProfileImg: "",
-        superAdminProfilePhoneNumber: "",
-        password: "",
-        isEditing: true,
-      });
-      setShowNewAdminForm(false);
-      console.log("Super admin created successfully!");
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Super admin created successfully with custom token:", data.customToken);
+        setAdmins((prevAdmins) => [
+          ...prevAdmins,
+          { ...newAdmin, firestoreId: data.uid, superAdminId: data.uid, superAdminProfileImg: profileImgUrl, isEditing: false },
+        ]);
+        setNewAdmin({
+          id: Date.now(),
+          superAdminId: "",
+          superAdminName: "",
+          superAdminEmail: "",
+          superAdminProfileImg: "",
+          superAdminProfilePhoneNumber: "",
+          password: "",
+          isEditing: true,
+        });
+        setShowNewAdminForm(false);
+      } else {
+        console.error("Error creating super admin:", data.error);
+      }
     } catch (error) {
       console.error("Error creating super admin:", error);
     }
     setLoading((prevLoading) => ({ ...prevLoading, newAdmin: false }));
   };
-  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
