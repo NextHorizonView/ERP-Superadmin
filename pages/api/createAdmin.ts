@@ -20,32 +20,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const { superAdminName, superAdminEmail, password, superAdminProfilePhoneNumber, profileImgUrl } = req.body;
 
-    // Create user in Firebase Auth
-    const userRecord = await admin.auth().createUser({
-      email: superAdminEmail,
-      password,
-      displayName: superAdminName,
-    });
+      // Create user in Firebase Auth
+      const userRecord = await admin.auth().createUser({
+        email: superAdminEmail,
+        password,
+        displayName: superAdminName,
+      });
 
-    // Generate custom token
-    const customToken = await admin.auth().createCustomToken(userRecord.uid);
+      // Generate custom token
+      const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
-    // Add the new admin to Firestore using the Auth UID as the document ID
-    const docRef = doc(db, "superadmins", userRecord.uid);
-    await setDoc(docRef, {
-      superAdminId: userRecord.uid,
-      superAdminName,
-      superAdminEmail,
-      superAdminProfileImg: profileImgUrl || "",
-      superAdminProfilePhoneNumber,
-    });
+      // Add the new admin to Firestore using the Auth UID as the document ID
+      const docRef = doc(db, "superadmins", userRecord.uid);
+      await setDoc(docRef, {
+        superAdminId: userRecord.uid,
+        superAdminName,
+        superAdminEmail,
+        superAdminProfileImg: profileImgUrl || "",
+        superAdminProfilePhoneNumber,
+      });
 
-    res.status(200).json({ message: "Super admin created successfully!" });
-  } catch (error) {
-    console.error("Error creating super admin:", error);
-    res.status(500).json({ error: "Error creating super admin" });
+      // Return both a success message and the custom token
+      res.status(200).json({ message: "Super admin created successfully!", customToken });
+    } catch (error) {
+      console.error("Error creating super admin:", error);
+      res.status(500).json({ error: "Error creating super admin" });
+    }
+  } else {
+    res.status(405).json({ error: "Method not allowed" });
   }
-} else {
-  res.status(405).json({ error: "Method not allowed" });
-}
 }

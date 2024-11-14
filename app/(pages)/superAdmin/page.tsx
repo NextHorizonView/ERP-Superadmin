@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Loader from "@/components/ui/Loader";
 import { Trash2, Edit3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { auth, db, storage } from "@/firebaseConfig";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
-import { createUserWithEmailAndPassword, getAuth, signInWithCustomToken } from "firebase/auth";
+import { db, storage } from "@/firebaseConfig";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import admin from "firebase-admin";
 
 interface Admin {
