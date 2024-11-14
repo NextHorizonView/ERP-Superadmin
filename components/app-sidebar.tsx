@@ -30,6 +30,11 @@ const authItems = [
     icon: Settings,
   },
   {
+    title: "Enquiry",
+    url: "/enquiry",
+    icon: Settings,
+  },
+  {
     title: "Superadmin Dashboard",
     url: "/superAdmin",
     icon: Settings,
@@ -82,7 +87,10 @@ export function AppSidebar() {
                 {(isAuthenticated ? authItems : unauthItems).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <Link href={item.url} onClick={() => handleNavigation(item.url)}>
+                      <Link
+                        href={item.url}
+                        onClick={() => handleNavigation(item.url)}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
