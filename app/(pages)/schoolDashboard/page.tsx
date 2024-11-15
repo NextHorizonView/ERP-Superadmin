@@ -111,7 +111,7 @@ export default function SchoolDashboard() {
           const docRef = await addDoc(schoolsCollection, {
             schoolName: school.schoolName,
             schoolEmail: school.schoolEmail,
-            SchoolId: user.uid,
+            Uid: user.uid,
             schoolLogo: logoUrl,
             schoolAddress: school.schoolAddress,
             schoolModuleBoolean: school.schoolModuleBoolean,
@@ -175,7 +175,7 @@ export default function SchoolDashboard() {
       await setDoc(doc(db, "schools", user.uid), {
         schoolName: newSchool.schoolName,
         schoolEmail: newSchool.schoolEmail,
-        SchoolId: user.uid, // Use the Auth UID as the document ID in Firestore
+        Uid: user.uid, // Use the Auth UID as the document ID in Firestore
         schoolLogo: logoUrl,
         schoolAddress: newSchool.schoolAddress,
         schoolModuleBoolean: newSchool.schoolModuleBoolean,

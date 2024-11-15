@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Search, Settings, LogOut } from "lucide-react";
+import { Home, Settings, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   Sidebar,
@@ -30,19 +30,24 @@ const authItems = [
     icon: Settings,
   },
   {
+    title: "Enquiry",
+    url: "/enquiry",
+    icon: Settings,
+  },
+  {
     title: "Superadmin Dashboard",
     url: "/superAdmin",
     icon: Settings,
   },
 ];
 
-const unauthItems = [
-  {
-    title: "LoginSuperAdmin",
-    url: "/login",
-    icon: Search,
-  },
-];
+// const unauthItems = [
+//   {
+//     title: "LoginSuperAdmin",
+//     url: "/login",
+//     icon: Search,
+//   },
+// ];
 
 export function AppSidebar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -51,6 +56,10 @@ export function AppSidebar() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoading(false); // Stop loading after auth check
+      if (!user) {
+        router.push("/login"); // Redirect if not authenticated
+      }
       setIsAuthenticated(!!user);
     });
     return () => unsubscribe();
@@ -69,39 +78,40 @@ export function AppSidebar() {
     router.push(url);
     setLoading(false); // Stop loading after navigation
   };
+  if (loading) return <Loader />;
 
   return (
-    <>
-      {loading && <Loader />} {/* Show loader while loading */}
+    isAuthenticated && (
       <Sidebar>
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>LOGO</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {(isAuthenticated ? authItems : unauthItems).map((item) => (
+                {authItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <Link href={item.url} onClick={() => handleNavigation(item.url)}>
+                      <Link
+                        href={item.url}
+                        onClick={() => handleNavigation(item.url)}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-                {isAuthenticated && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout}>
-                      <LogOut />
-                      <span>Logout</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={handleLogout}>
+                    <LogOut />
+                    <span>Logout</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-    </>
+    )
   );
 }
