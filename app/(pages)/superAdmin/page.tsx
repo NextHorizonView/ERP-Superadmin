@@ -39,7 +39,8 @@ export default function SuperAdminPage() {
     superAdminProfileImgFile: null,
   });
   const [showNewAdminForm, setShowNewAdminForm] = useState(false);
-  const [loading, setLoading] = useState<{ [key: number]: boolean }>({});
+  const [loading, setLoading] = useState<{ [key: number]: boolean; newAdmin?: boolean }>({});
+
 
   const adminsCollection = collection(db, "superadmins");
 
@@ -258,23 +259,41 @@ export default function SuperAdminPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {admin.isEditing ? (
-                   <Button
-                   onClick={() => saveChanges(admin.id)}
-                   disabled={loading[admin.id]}
-                 >
-                   {loading[admin.id] ? <Loader /> : "Save"}
-                 </Button>
+                    <Button onClick={() => saveChanges(admin.id)} disabled={loading[admin.id]}>
+                      {loading[admin.id] ? <Loader /> : "Save"}
+                    </Button>
                   ) : (
-                    <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => toggleEdit(admin.id)}>
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
+                    <Button
+                      className="w-full sm:w-auto"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleEdit(admin.id)}
+                      disabled={loading[admin.id]}
+                    >
+                      {loading[admin.id] ? <Loader /> : (
+                        <>
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit
+                        </>
+                      )}
                     </Button>
                   )}
-                  <Button className="w-full sm:w-auto" variant="destructive" size="sm" onClick={() => deleteAdmin(admin.id)}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                  <Button
+                    className="w-full sm:w-auto"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => deleteAdmin(admin.id)}
+                    disabled={loading[admin.id]}
+                  >
+                    {loading[admin.id] ? <Loader /> : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </>
+                    )}
                   </Button>
                 </div>
+
               </li>
             ))}
           </ul>
@@ -311,7 +330,9 @@ export default function SuperAdminPage() {
                 placeholder="Password"
                 type="password"
               />
-              <Button onClick={addNewAdmin}>Save New Admin</Button>
+              <Button onClick={addNewAdmin} disabled={loading.newAdmin}>
+              {loading.newAdmin ? <Loader /> : "Save New Admin"}
+            </Button>
             </div>
           )}
         </CardContent>
