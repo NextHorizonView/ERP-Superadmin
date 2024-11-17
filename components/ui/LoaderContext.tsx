@@ -24,6 +24,8 @@ export const LoaderProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   };
 
+  
+
   return (
     <LoaderContext.Provider value={{ loading, showLoader, hideLoader }}>
       {loading && <Loader />}
