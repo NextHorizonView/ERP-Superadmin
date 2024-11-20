@@ -1,4 +1,4 @@
-// api/createAdmin.ts (Server-side API route)
+// pages/api/createSchool.ts
 import admin from "firebase-admin";
 import { db } from "@/firebaseConfig"; // Ensure this is configured with Firestore
 import { setDoc, doc } from "firebase/firestore";
@@ -18,39 +18,40 @@ if (!admin.apps.length) {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     try {
-      const { superAdminName, superAdminEmail, password, superAdminProfilePhoneNumber, profileImgUrl } = req.body;
+      const { schoolName, schoolEmail, schoolPassword, schoolLogo, schoolAddress, schoolModuleBoolean } = req.body;
 
       // Create user in Firebase Auth
       const userRecord = await admin.auth().createUser({
-        email: superAdminEmail,
-        password,
-        displayName: superAdminName,
+        email: schoolEmail,
+        password: schoolPassword,
+        displayName: schoolName,
       });
 
       // Set custom claims for the user
       await admin.auth().setCustomUserClaims(userRecord.uid, {
-        role: "superAdmin", // Assign the 'admin' role similarly add other roles
+        role: "admin", // Assign the 'schoolAdmin' role
       });
 
       // Generate custom token
       const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
-      // Add the new admin to Firestore using the Auth UID as the document ID
-      const docRef = doc(db, "superadmins", userRecord.uid);
+      // Add the new school to Firestore using the Auth UID as the document ID
+      const docRef = doc(db, "schools", userRecord.uid);
       await setDoc(docRef, {
-        superAdminId: userRecord.uid,
-        superAdminName,
-        superAdminEmail,
-        superAdminProfileImg: profileImgUrl || "",
-        superAdminProfilePhoneNumber,
-        role: "superAdmin", // Store the role in Firestore for easy lookup
+        schoolName,
+        schoolEmail,
+        schoolId: userRecord.uid,
+        schoolLogo,
+        schoolAddress,
+        schoolModuleBoolean,
+        role: "admin", // Store the role in Firestore for easy lookup
       });
 
       // Return both a success message and the custom token
-      res.status(200).json({ message: "Super admin created successfully!", customToken });
+      res.status(200).json({ message: "School created successfully!", customToken });
     } catch (error) {
-      console.error("Error creating super admin:", error);
-      res.status(500).json({ error: "Error creating super admin" });
+      console.error("Error creating school:", error);
+      res.status(500).json({ error: "Error creating school" });
     }
   } else {
     res.status(405).json({ error: "Method not allowed" });

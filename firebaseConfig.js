@@ -1,11 +1,11 @@
 // firebaseConfig.js
-import { initializeApp } from 'firebase/app';
+import { initializeApp, createUserWithEmailAndPassword } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: 'localhost',
+  authDomain: 'schoolerp-a74fb.firebaseapp.com',
   projectId: 'schoolerp-a74fb',
   storageBucket: 'gs://schoolerp-a74fb.firebasestorage.app',
   messagingSenderId: '198618808281',

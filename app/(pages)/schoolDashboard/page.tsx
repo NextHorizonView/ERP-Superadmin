@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { db, auth, storage } from "@/firebaseConfig"; 
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
+import { db, storage, auth } from "@/firebaseConfig"; 
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Trash2, Edit3 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import Loader from "@/components/ui/Loader"; // Ensure you have a Loader component
 
 interface School {
   id: string;
@@ -39,6 +40,7 @@ export default function SchoolDashboard() {
     schoolLogoFile: null,
   });
   const [isAddingNewSchool, setIsAddingNewSchool] = useState(false);
+  const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
 
   const schoolsCollection = collection(db, "schools");
 
@@ -93,6 +95,7 @@ export default function SchoolDashboard() {
   };
 
   const saveChanges = async (id: string) => {
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: true }));
     const school = schools.find((s) => s.id === id);
     if (school) {
       let logoUrl = school.schoolLogo;
@@ -111,7 +114,7 @@ export default function SchoolDashboard() {
           const docRef = await addDoc(schoolsCollection, {
             schoolName: school.schoolName,
             schoolEmail: school.schoolEmail,
-            Uid: user.uid,
+            schoolId: user.uid,
             schoolLogo: logoUrl,
             schoolAddress: school.schoolAddress,
             schoolModuleBoolean: school.schoolModuleBoolean,
@@ -140,82 +143,83 @@ export default function SchoolDashboard() {
           )
         );
       }
+      setLoading((prevLoading) => ({ ...prevLoading, [id]: false }));
       console.log(`Changes saved for school with ID: ${id}`);
     }
   };
 
   const deleteSchool = async (id: string) => {
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: true }));
     const school = schools.find((s) => s.id === id);
     if (school?.firestoreId) {
       const schoolDoc = doc(db, "schools", school.firestoreId);
       await deleteDoc(schoolDoc);
     }
     setSchools(schools.filter((school) => school.id !== id));
+    setLoading((prevLoading) => ({ ...prevLoading, [id]: false }));
   };
 
-  
   const addNewSchool = async () => {
+    setLoading((prevLoading) => ({ ...prevLoading, newSchool: true }));
     try {
       let logoUrl = "";
       if (newSchool.schoolLogoFile) {
         logoUrl = await uploadLogo(newSchool.schoolLogoFile);
       }
-  
-      // Step 1: Create the user in Firebase Auth
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        newSchool.schoolEmail,
-        newSchool.schoolPassword
-      );
-  
-      // Step 2: Update the Auth profile with additional details if needed
-      await updateProfile(user, { displayName: newSchool.schoolName });
-  
-      // Step 3: Use the Auth UID as the Firestore document ID
-      await setDoc(doc(db, "schools", user.uid), {
-        schoolName: newSchool.schoolName,
-        schoolEmail: newSchool.schoolEmail,
-        Uid: user.uid, // Use the Auth UID as the document ID in Firestore
-        schoolLogo: logoUrl,
-        schoolAddress: newSchool.schoolAddress,
-        schoolModuleBoolean: newSchool.schoolModuleBoolean,
-      });
-  
-      // Update the local state with new school data
-      setSchools((prevSchools) => [
-        ...prevSchools,
-        {
-          id: uuidv4(),
-          firestoreId: user.uid, // Use the same UID here
-          schoolId: user.uid,    // Same UID for consistency
+
+      const response = await fetch("/api/createSchool", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           schoolName: newSchool.schoolName,
           schoolEmail: newSchool.schoolEmail,
-          schoolPassword: "",
+          schoolPassword: newSchool.schoolPassword,
           schoolLogo: logoUrl,
           schoolAddress: newSchool.schoolAddress,
           schoolModuleBoolean: newSchool.schoolModuleBoolean,
-          isEditing: false,
-        },
-      ]);
-  
-      // Reset the new school state
-      setNewSchool({
-        id: uuidv4(),
-        schoolName: "",
-        schoolEmail: "",
-        schoolPassword: "",
-        schoolLogo: "",
-        schoolAddress: "",
-        schoolModuleBoolean: true,
-        isEditing: true,
-        schoolLogoFile: null,
+        }),
       });
-      setIsAddingNewSchool(false);
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log("School created successfully with custom token:", data.customToken);
+        setSchools((prevSchools) => [
+          ...prevSchools,
+          {
+            id: uuidv4(),
+            firestoreId: data.schoolId,
+            schoolId: data.schoolId,
+            schoolName: newSchool.schoolName,
+            schoolEmail: newSchool.schoolEmail,
+            schoolPassword: "",
+            schoolLogo: logoUrl,
+            schoolAddress: newSchool.schoolAddress,
+            schoolModuleBoolean: newSchool.schoolModuleBoolean,
+            isEditing: false,
+          },
+        ]);
+        setNewSchool({
+          id: uuidv4(),
+          schoolName: "",
+          schoolEmail: "",
+          schoolPassword: "",
+          schoolLogo: "",
+          schoolAddress: "",
+          schoolModuleBoolean: true,
+          isEditing: true,
+          schoolLogoFile: null,
+        });
+        setIsAddingNewSchool(false);
+      } else {
+        console.error("Error creating school:", data.error);
+      }
     } catch (error) {
-      console.error("Error adding new school:", error);
+      console.error("Error creating school:", error);
     }
+    setLoading((prevLoading) => ({ ...prevLoading, newSchool: false }));
   };
-  
 
   return (
     <div className="w-full flex flex-col items-center p-2 sm:p-4 min-h-screen">
@@ -228,8 +232,8 @@ export default function SchoolDashboard() {
         <CardContent>
           <ul className="space-y-4">
             {schools.map((school) => (
-              <li key={school.id} className="bg-card p-3 sm:p-4 rounded flex flex-col gap-3">
-                <div className="w-full">
+              <li key={school.id} className="bg-card p-3 sm:p-4 rounded flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <div className="w-full sm:w-auto">
                   {school.isEditing ? (
                     <div className="space-y-2">
                       <Input
@@ -268,32 +272,60 @@ export default function SchoolDashboard() {
                       </label>
                     </div>
                   ) : (
-                    <div>
-                      <h4 className="text-lg font-bold">{school.schoolName}</h4>
-                      <img src={school.schoolLogo} alt="School Logo" className="h-10 w-10 object-cover rounded-full" />
-                      <p>Email: {school.schoolEmail}</p>
-                      <p>Address: {school.schoolAddress}</p>
-                      <p>Module Active: {school.schoolModuleBoolean ? "Yes" : "No"}</p>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">{school.schoolName}</h4>
+                      <img src={school.schoolLogo} alt={`${school.schoolName} Logo`} className="w-20 h-20 object-cover rounded-full" />
+                      <p className="text-sm text-muted-foreground">{school.schoolAddress}</p>
+                      <p className="text-sm text-muted-foreground">{school.schoolModuleBoolean ? "Active" : "Inactive"}</p>
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => toggleEdit(school.id)}>
-                    {school.isEditing ? "Cancel" : <Edit3 />}
-                  </Button>
+                <div className="flex flex-wrap gap-2">
                   {school.isEditing ? (
-                    <Button onClick={() => saveChanges(school.id)}>Save</Button>
+                    <Button onClick={() => saveChanges(school.id)} disabled={loading[school.id]}>
+                      {loading[school.id] ? <Loader /> : "Save"}
+                    </Button>
                   ) : (
-                    <Button variant="destructive" onClick={() => deleteSchool(school.id)}>
-                      <Trash2 />
+                    <Button
+                      className="w-full sm:w-auto"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleEdit(school.id)}
+                      disabled={loading[school.id]}
+                    >
+                      {loading[school.id] ? <Loader /> : (
+                        <>
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit
+                        </>
+                      )}
                     </Button>
                   )}
+                  <Button
+                    className="w-full sm:w-auto"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => deleteSchool(school.id)}
+                    disabled={loading[school.id]}
+                  >
+                    {loading[school.id] ? <Loader /> : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
                 </div>
               </li>
             ))}
           </ul>
+          {!isAddingNewSchool && (
+            <div className="w-full mt-3 sm:mt-5 flex justify-center">
+              <Button onClick={() => setIsAddingNewSchool(true)}>Add New Admin</Button>
+            </div>
+          )}
           {isAddingNewSchool && (
-            <div className="mt-4 space-y-2">
+            <div className="w-full mt-4 flex flex-col gap-3 sm:gap-4">
               <Input
                 value={newSchool.schoolName}
                 onChange={(e) => setNewSchool({ ...newSchool, schoolName: e.target.value })}
@@ -330,17 +362,9 @@ export default function SchoolDashboard() {
                 />
                 <span className="ml-2">Active</span>
               </label>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsAddingNewSchool(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={addNewSchool}>Add School</Button>
-              </div>
-            </div>
-          )}
-          {!isAddingNewSchool && (
-            <div className="mt-4 flex justify-end">
-              <Button onClick={() => setIsAddingNewSchool(true)}>Add New School</Button>
+              <Button onClick={addNewSchool} disabled={loading.newSchool}>
+                {loading.newSchool ? <Loader /> : "Save New Admin"}
+              </Button>
             </div>
           )}
         </CardContent>
